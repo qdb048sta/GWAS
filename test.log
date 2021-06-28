@@ -1,0 +1,671 @@
+-----------------------------------------------------------------
+      name:  <unnamed>
+       log:  D:\User_Data\Documents\GitHub\GWAS\test.log
+  log type:  text
+ opened on:  28 Jun 2021, 11:35:34
+
+. 
+. clear all
+
+. macro drop _all
+
+. 
+. // set working directory
+. cd "E:\plink_2021_test_execution"
+E:\plink_2021_test_execution
+
+. 
+. // set path for plink
+. global plinkpath "D:\User_Data\Desktop\基因\plink\plink.exe"
+
+. global plink2path "D:\User_Data\Desktop\基因\plink2\plink2.exe"
+
+. 
+. // set data path
+. global data "E:\plink_2021_test_execution\combined_TWB1_TWB2\co
+> mbined.TWB1.TWB2.high.confidence.v1"
+
+. // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)
+> \TWBR10810-06_TWB1"
+. 
+. global datatype "imputation"  /*"imputation" or "", skips QC st
+> eps 4 & 5 if enter "imputation"*/
+
+. // global datatype ""  /*"imputation" or "", skips QC steps 4 &
+>  5 if enter "imputation"*/
+. 
+. 
+. global merged_survey "E:\plink_2021_test_execution\twbiobank_me
+> rged_20201109"  
+
+. /*編號00 do檔製造出來的問卷資料*/
+. 
+. global do01 "01_plink survey data input_20201116" /*編號01 do檔
+> 名稱/位置*/
+
+. 
+. 
+. /*
+> global merged_survey "C:\Data\TWBioBank\twbiobank_merged_202011
+> 09"  
+> /*編號00 do檔製造出來的問卷資料*/
+> 
+> global do01 "C:\Data\TWBioBank\01_plink survey data input_20201
+> 208" /*編號01 do檔名稱/位置*/
+> run "${do01}" /*select individuals*/
+> */
+. 
+. // ------------------------------------------------------------
+> --------------------
+. global filename = ""
+
+. local loc = strpos("$data", "TWB1")
+
+. if `loc'!=0{
+.     global filename = "TWB1_"
+. }
+
+. local loc = strpos("$data", "TWB2")
+
+. if `loc'!=0{
+.     global filename = "TWB2_"
+. }
+
+. local loc = strpos("$data", "combined")
+
+. if `loc'!=0{
+.     global filename = "TWB1+2_"
+. }
+
+. 
+. if "$datatype"=="imputation"{
+.     global filename = "${filename}imp_"
+. }
+
+. //-------------------------------------------------------------
+> --------------------
+. // start from certain step, options include "" and elements in 
+> `steps'
+. global start_from "QC9_relate" /*if "", detects whether files e
+> xist and start from latest step*/
+
+. 
+. local steps = "QC1_maf QC2_miss QC3_bi QC4_sex QC5_chrom QC6_hw
+> e QC7_het QC9_relate pca QC0_keep gwas clump prs recode"
+
+. 
+. global nstart_from .
+
+. local ct 0
+
+. foreach i of local steps{
+  2.         local ++ct
+  3.         if "`i'"=="${start_from}"{
+  4.                 global nstart_from `ct' 
+  5.         }
+  6. }
+
+. //-------------------------------------------------------------
+> --------------------
+. // set QC thresholds
+. global setmaf = 0.01      /*set minor allele frequency*/
+
+. global setgeno = 0.05     /*set genotype missingness*/
+
+. global setmind = 0.05     /*set individual missingness*/
+
+. global setking = 0.066    /*set individual relatedness*/
+
+.                                                   /*first-degre
+> e relations: 0.177; second-degree: 0.088; third-degree: 0.044; 
+> */
+.                                                   /*between sec
+> ond & third: 0.066*/
+. global setwindow = 500    /*set pruning window*/
+
+. global setstep = 5        /*set pruning step size*/
+
+. global setr2 = 0.2        /*set pruning R2*/
+
+. global setclumpr2 = 0.5   /*set clumping R2*/
+
+. global setclumpkb = 250   /*set clumping distance in kilobase*/
+
+. 
+. // set number of principal components
+. global pcs 10
+
+. 
+. // set phenotypes
+. global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
+
+. // global phenos "eduyrs"
+. 
+. // set significant levels (p-values) for clumping
+. global siglevel_list "0.00000005 0.000001"
+
+. // global siglevel_list "0.000001"
+. 
+. // set sex
+. global sex "_m _f _a" /*f for female, m for male, a for all*/
+
+. // global sex "_a"
+. 
+. // set conditions
+. global condition "AGE<=55"  /*if XXX, no need to enter sex, wil
+> l generate 3 files (male, female, all)*/
+
+. 
+. // local list "FID IID SEX AGE birth_year BODY_HEIGHT BODY_WEIG
+> HT lbody_height BMI eduyrs inc_self_mid inc_family_mid"
+. global vars "`list'"
+
+. global vars ""
+
+. 
+. 
+. //=============================================================
+> ========================
+. 
+. 
+.         /*
+>         QC steps
+>         */ 
+.         global QC1 = "${filename}A_qc_01_maf"
+
+.         global QC2 = "${filename}A_qc_02_missing"
+
+.         global QC3 = "${filename}A_qc_03_biallelic"
+
+.         global QC4 = "${filename}A_qc_04_sex"
+
+.         global QC5 = "${filename}A_qc_05_chrom"
+
+.         global QC6 = "${filename}A_qc_06_hwe"
+
+.         global QC7 = "${filename}A_qc_07_het"
+
+.         global freq = "${filename}A_qc_freq"
+
+.         global QC9 = "${filename}A_qc_09_relatedness_done"
+
+.         global QC10 = "${filename}A_qc_10_pruned"
+
+.         global QC0 = "${filename}A_qc_00_keep"
+
+. 
+. 
+.         // remove SNPs with MAF under threshold
+. //      Minor allele frequencies/counts
+. //      --maf filters out all variants with minor allele freque
+> ncy below the provided threshold (default 0.01)
+. //      https://www.cog-genomics.org/plink/1.9/filter#maf
+.         
+.         cap confirm file "${QC1}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1
+.                 
+.                 shell "$plink2path" --bfile "${data}" --maf $se
+> tmaf --make-bed --out "${QC1}"   //filter out the data with pro
+> vided threshold
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 1 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC1}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // remove SNPs and individuals with genotype calls and 
+> genotype missingness less than thresholds
+. //      Missing genotype rates
+. //      --geno filters out all variants with missing call rates
+>  exceeding the provided value 
+. //      (default 0.1) to be removed, while --mind does the same
+>  for samples.
+. //      https://www.cog-genomics.org/plink/1.9/filter#missing
+.         
+.         cap confirm file "${QC2}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 2 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1
+.                 
+.                 shell "$plink2path" --bfile "${QC1}" --geno $se
+> tgeno --mind $setmind --make-bed --out "${QC2}" //超過0.01 miss
+> ing 會被filter  --mind do the same thing
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 2 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC2}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // remove SNPs that are not biallelic (雙等位基因)
+. //      By default, all variants are loaded; when more than one
+>  alternate allele is present,
+. //      the reference allele and the most common alternate are 
+> tracked (ties broken in favor 
+. //      of the lower-numbered allele) and the rest are coded as
+>  missing calls. To simply skip all
+. //      variants where at least two alternate alleles are prese
+> nt in the dataset, use --biallelic-only.
+. //      https://www.cog-genomics.org/plink/1.9/input#vcf_filter
+. //      
+. //      --snps-only excludes all variants with one or more mult
+> i-character allele codes. With 'just-acgt', 
+. //      variants with single-character allele codes outside of 
+> {'A', 'C', 'G', 'T', 'a', 'c', 'g', 't', 
+. //      <missing code>} are also excluded.
+. //      https://www.cog-genomics.org/plink/1.9/filter#snps_only
+.         
+.         cap confirm file "${QC3}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 3 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+. //              shell "$plinkpath" --bfile "${QC2}" --snps-only
+>  just-acgt --biallelic-only strict list --make-bed --out "${QC3
+> }"        
+.                 shell "$plink2path" --bfile "${QC2}" --snps-onl
+> y just-acgt --max-alleles 2 --make-bed --out "${QC3}"    //這些
+> 有male bed的都是filtering data
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 3 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC3}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         local nextfile = "${QC3}"
+
+.         if "$datatype" != "imputation"{
+.                 cap confirm file "${QC4}.bed"
+.                 if (_rc & ${nstart_from}==.)| (${nstart_from}<=
+>  4 & ${nstart_from}!=.) {
+. 
+.                         // check if reported sex is the same as
+>  imputed sex from genetic data, remove individual if not
+. //                      Sex imputation
+. //                      --check-sex normally compares sex assig
+> nments in the input dataset with those
+. //                      imputed from X chromosome inbreeding co
+> efficients, and writes a report to plink.sexcheck.
+. //                  https://www.cog-genomics.org/plink/1.9/basi
+> c_stats#check_sex
+.                         
+.                         timer clear 1
+.                         timer on 1      
+.                         
+.                         shell "$plinkpath" --bfile "${QC3}" --c
+> heck-sex --out "${QC4}"
+.                         
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC4}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+.                         
+.                         qui import delimited "${QC4}.sexcheck",
+>  delimiter(whitespace, collapse) case(preserve) clear 
+.                         qui keep if STATUS == "PROBLEM"
+.                         qui keep FID IID
+.                         qui export delimited using "${QC4}.txt"
+> , nolab delimiter(tab) replace
+.                         shell "$plink2path" --bfile "${QC3}" --
+> remove "${QC4}.txt" --make-bed --out "${QC4}"
+.                         
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC4}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+. 
+.                         timer off 1
+.                         qui timer list 1
+.                         local time1 = r(t1)/60
+.                         di "qc 4 used `time1'  minutes"
+.                         
+.                 }
+.                 
+.                 
+.                 // keep chromosomes 1-22 only 
+. //      Chromosomes
+. //      --chr excludes all variants not on the listed chromosom
+> e(s). 
+. //      Normally, valid choices for humans are 0 (i.e. unknown)
+> , 1-22, X, Y, XY 
+. //      (pseudo-autosomal region of X; see --split-x/--merge-x)
+> , and MT.
+. //      https://www.cog-genomics.org/plink/1.9/filter#chr
+.         
+.                 cap confirm file "${QC5}.bed"
+.                 if (_rc & ${nstart_from}==.)| (${nstart_from}<=
+>  5 & ${nstart_from}!=.) {
+. 
+.                         timer clear 1
+.                         timer on 1      
+.                         
+.                         shell "$plink2path" --bfile "${QC4}" --
+> chr 1-22 --make-bed --out "${QC5}"       //still filtering out 
+> stuff
+.                         
+.                         timer off 1
+.                         qui timer list 1
+.                         local time1 = r(t1)/60
+.                         di "qc 5 used `time1'  minutes"
+.                 
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC5}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'   
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+. 
+.                 }
+.                 
+.                 local nextfile = "${QC5}"
+.         }
+
+.         
+.         
+.         if "`nextfile'"=="${QC3}"{
+.                 di "qc 4 & 5 skipped"
+qc 4 & 5 skipped
+.         }
+
+.         
+.         
+.         // keep only SNPs that does not deviate from hardy-wein
+> berg equilibrium 
+. //      Hardy-Weinberg equilibrium tests 一個群體在理想情況（不
+> 受特定的干擾因素影響，如非隨機交配、天擇、族群遷移、突變或群體
+> 大小有限）
+. //，經過多個世代，基因頻率與基因型頻率會保持恆定並處於穩定的平
+> 衡狀態
+. //      --hwe filters out all variants which have Hardy-Weinber
+> g equilibrium exact 
+. //      test p-value below the provided threshold.
+. //  https://www.cog-genomics.org/plink/1.9/filter#hwe
+.         
+.         cap confirm file "${QC6}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 6 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plink2path" --bfile "`nextfile'" --hwe 
+> 1e-6 --make-bed --out "${QC6}" //filter out data failed Hardy W
+> einberg test
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 6 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC6}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+. 
+.         // exclude individuals with heterozygosity rates that a
+> re too high or too low   heterz
+. //      Inbreeding
+. //      --het computes observed and expected autosomal homozygo
+> us genotype counts 
+. //      for each sample, and reports method-of-moments F coeffi
+> cient estimates 
+. //      (i.e. (<observed hom. count> - <expected count>) / (<to
+> tal observations> - <expected count>)) to plink.het. 
+. //  https://www.cog-genomics.org/plink/1.9/basic_stats#ibc
+.         
+.         cap confirm file "${QC7}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 7 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plinkpath" --bfile "${QC6}" --missing -
+> -het --out "${QC7}"    //give report on missing sample and vari
+> ant report
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC7}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+.                 
+.                 qui import delimited "${QC7}.het", delimiter(wh
+> itespace, collapse) case(preserve) clear 
+.                 qui g het_rate = (NNM-OHOM)/NNM
+.                 qui sum het_rate
+.                 local mean = r(mean)
+.                 local std = r(sd)
+.                 local upper_bound = `mean' + 3*`std'
+.                 local lower_bound = `mean' - 3*`std'
+.                 qui keep if het_rate > `upper_bound' | het_rate
+>  < `lower_bound'
+.                 qui export delimited using "${QC7}.txt", nolab 
+> delimiter(tab) replace   
+.                 shell "$plink2path" --bfile "${QC6}" --remove "
+> ${QC7}.txt" --make-bed --out "${QC7}"
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 7 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC7}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // kinship based pruning  
+. //      --king-cutoff excludes one member of each pair of sampl
+> es with kinship coefficient greater than the given threshold
+. //      https://www.cog-genomics.org/plink/2.0/distance#king_co
+> efs
+. 
+.         cap confirm file "${QC9}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 8 & ${n
+> start_from}!=.) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plink2path" --bfile "${QC7}" --king-cut
+> off $setking --make-bed --out "${QC9}"   //cut off the pair tha
+> t is too closed
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 9 used `time1'  minutes"
+qc 9 used .0164  minutes
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC9}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+Error: Failed to open TWB1+2_imp_A_qc_07_het.fam : No such file o
+> r directory.
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+--Break--
+r(1);
+.                 }
+--Break--
+r(1);
+. 
+.         }
+--Break--
+r(1);
+
+end of do-file
+
+--Break--
+r(1);
+
+. exit, clear
