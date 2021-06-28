@@ -10,8 +10,8 @@ macro drop _all
 cd "E:\plink_2021_test_execution"
 
 // set path for plink
-global plinkpath "D:\TWB\plink\plink.exe"
-global plink2path "D:\TWB\plink2\plink2.exe"
+global plinkpath "D:\User_Data\Desktop\基因\plink\plink.exe"
+global plink2path "D:\User_Data\Desktop\基因\plink2\plink2.exe"
 
 // set data path
 global data "E:\plink_2021_test_execution\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
