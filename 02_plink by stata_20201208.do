@@ -57,7 +57,7 @@ if "$datatype"=="imputation"{
 }
 //---------------------------------------------------------------------------------
 // start from certain step, options include "" and elements in `steps'
-global start_from "QC9_relate" /*if "", detects whether files exist and start from latest step*/
+global start_from "QC1_maf" /*if "", detects whether files exist and start from latest step*/
 
 local steps = "QC1_maf QC2_miss QC3_bi QC4_sex QC5_chrom QC6_hwe QC7_het QC9_relate pca QC0_keep gwas clump prs recode"
 
@@ -138,13 +138,13 @@ global vars ""
 	global QC10_10= "${filename}A_qc_10_10_pruned"
 	global QC0_10= "${filename}A_qc_00_10_keep"
 	
-	cap confirm file "${QC1}.bed"
+	cap confirm file "${QC1_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1
 		shell "$plink2path" --bfile "${data}" --thin-indiv 0.1 --make-bed --out "${data_one_tenth}"	//select 1/10
-		shell "$plink2path" --bfile "${data_one_tenth}" --maf $setmaf --make-bed --out "${QC1}"	//filter out the data with provided threshold
+		shell "$plink2path" --bfile "${data_one_tenth}" --maf $setmaf --make-bed --out "${QC1_10}"	//filter out the data with provided threshold
 		
 		
 		timer off 1
@@ -178,13 +178,13 @@ global vars ""
 // 	(default 0.1) to be removed, while --mind does the same for samples.
 // 	https://www.cog-genomics.org/plink/1.9/filter#missing
 	
-	cap confirm file "${QC2}.bed"
+	cap confirm file "${QC2_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 2 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1
 		
-		shell "$plink2path" --bfile "${QC1}" --geno $setgeno --mind $setmind --make-bed --out "${QC2}" //超過0.01 missing 會被filter  --mind do the same thing
+		shell "$plink2path" --bfile "${QC1_10}" --geno $setgeno --mind $setmind --make-bed --out "${QC2_10}" //超過0.01 missing 會被filter  --mind do the same thing
 		
 		timer off 1
 		qui timer list 1
@@ -223,14 +223,14 @@ global vars ""
 // 	<missing code>} are also excluded.
 // 	https://www.cog-genomics.org/plink/1.9/filter#snps_only
 	
-	cap confirm file "${QC3}.bed"
+	cap confirm file "${QC3_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 3 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1	
 		
 // 		shell "$plinkpath" --bfile "${QC2}" --snps-only just-acgt --biallelic-only strict list --make-bed --out "${QC3}"	
-		shell "$plink2path" --bfile "${QC2}" --snps-only just-acgt --max-alleles 2 --make-bed --out "${QC3}"	//這些有male bed的都是filtering data
+		shell "$plink2path" --bfile "${QC2_10}" --snps-only just-acgt --max-alleles 2 --make-bed --out "${QC3_10}"	//這些有male bed的都是filtering data
 		
 		timer off 1
 		qui timer list 1
@@ -257,9 +257,9 @@ global vars ""
 
 	}
 	
-	local nextfile = "${QC3}"
+	local nextfile = "${QC3_10}"
 	if "$datatype" != "imputation"{
-		cap confirm file "${QC4}.bed"
+		cap confirm file "${QC4_10}.bed"
 		if (_rc & ${nstart_from}==.)| (${nstart_from}<= 4 & ${nstart_from}!=.) {
 
 			// check if reported sex is the same as imputed sex from genetic data, remove individual if not
@@ -271,7 +271,7 @@ global vars ""
 			timer clear 1
 			timer on 1	
 			
-			shell "$plinkpath" --bfile "${QC3}" --check-sex --out "${QC4}"
+			shell "$plinkpath" --bfile "${QC3_10}" --check-sex --out "${QC4_10}"
 			
 			local stop 0
 			cap file close log
@@ -291,17 +291,17 @@ global vars ""
 				error 1 /*force break*/
 			}
 			
-			qui import delimited "${QC4}.sexcheck", delimiter(whitespace, collapse) case(preserve) clear 
+			qui import delimited "${QC4_10}.sexcheck", delimiter(whitespace, collapse) case(preserve) clear 
 			qui keep if STATUS == "PROBLEM"
 			qui keep FID IID
-			qui export delimited using "${QC4}.txt", nolab delimiter(tab) replace
+			qui export delimited using "${QC4_10}.txt", nolab delimiter(tab) replace
 			/*gen 1/10 dataset
 			clear
 			qui import delimited "${QC3}", delimiter(whitespace, collapse) case(preserve) clear 
 			qui sample 10
 			qui export delimited using "${QC3}.txt", nolab delimiter(tab) replace
 			*/
-			shell "$plink2path" --bfile "${QC3}" --remove "${QC4}.txt" --make-bed --out "${QC4}"
+			shell "$plink2path" --bfile "${QC3_10}" --remove "${QC4_10}.txt" --make-bed --out "${QC4_10}"
 			
 			local stop 0
 			cap file close log
@@ -336,13 +336,13 @@ global vars ""
 // 	(pseudo-autosomal region of X; see --split-x/--merge-x), and MT.
 // 	https://www.cog-genomics.org/plink/1.9/filter#chr
 	
-		cap confirm file "${QC5}.bed"
+		cap confirm file "${QC5_10}.bed"
 		if (_rc & ${nstart_from}==.)| (${nstart_from}<= 5 & ${nstart_from}!=.) {
 
 			timer clear 1
 			timer on 1	
 			
-			shell "$plink2path" --bfile "${QC4}" --chr 1-22 --make-bed --out "${QC5}"	//still filtering out stuff
+			shell "$plink2path" --bfile "${QC4_10}" --chr 1-22 --make-bed --out "${QC5_10}"	//still filtering out stuff
 			
 			timer off 1
 			qui timer list 1
@@ -369,11 +369,11 @@ global vars ""
 
 		}
 		
-		local nextfile = "${QC5}"
+		local nextfile = "${QC5_10}"
 	}
 	
 	
-	if "`nextfile'"=="${QC3}"{
+	if "`nextfile'"=="${QC3_10}"{
 		di "qc 4 & 5 skipped"
 	}
 	
@@ -385,13 +385,13 @@ global vars ""
 // 	test p-value below the provided threshold.
 //  https://www.cog-genomics.org/plink/1.9/filter#hwe
 	
-	cap confirm file "${QC6}.bed"
+	cap confirm file "${QC6_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 6 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1	
 		
-		shell "$plink2path" --bfile "`nextfile'" --hwe 1e-6 --make-bed --out "${QC6}" //filter out data failed Hardy Weinberg test
+		shell "$plink2path" --bfile "`nextfile'" --hwe 1e-6 --make-bed --out "${QC6_10}" //filter out data failed Hardy Weinberg test
 		
 		timer off 1
 		qui timer list 1
@@ -400,7 +400,7 @@ global vars ""
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC6}.log", read 
+		file open log using "${QC6_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -425,17 +425,17 @@ global vars ""
 // 	(i.e. (<observed hom. count> - <expected count>) / (<total observations> - <expected count>)) to plink.het. 
 //  https://www.cog-genomics.org/plink/1.9/basic_stats#ibc
 	
-	cap confirm file "${QC7}.bed"
+	cap confirm file "${QC7_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 7 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1	
 		
-		shell "$plinkpath" --bfile "${QC6}" --missing --het --out "${QC7}"    //give report on missing sample and variant report
+		shell "$plinkpath" --bfile "${QC6_10}" --missing --het --out "${QC7_10}"    //give report on missing sample and variant report
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC7}.log", read 
+		file open log using "${QC7_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -451,7 +451,7 @@ global vars ""
 			error 1 /*force break*/
 		}
 		
-		qui import delimited "${QC7}.het", delimiter(whitespace, collapse) case(preserve) clear 
+		qui import delimited "${QC7_10}.het", delimiter(whitespace, collapse) case(preserve) clear 
 		qui g het_rate = (NNM-OHOM)/NNM
 		qui sum het_rate
 		local mean = r(mean)
@@ -459,8 +459,8 @@ global vars ""
 		local upper_bound = `mean' + 3*`std'
 		local lower_bound = `mean' - 3*`std'
 		qui keep if het_rate > `upper_bound' | het_rate < `lower_bound'
-		qui export delimited using "${QC7}.txt", nolab delimiter(tab) replace	
-		shell "$plink2path" --bfile "${QC6}" --remove "${QC7}.txt" --make-bed --out "${QC7}"
+		qui export delimited using "${QC7_10}.txt", nolab delimiter(tab) replace	
+		shell "$plink2path" --bfile "${QC6_10}" --remove "${QC7_10}.txt" --make-bed --out "${QC7_10}"
 		
 		timer off 1
 		qui timer list 1
@@ -491,13 +491,13 @@ global vars ""
 // 	--king-cutoff excludes one member of each pair of samples with kinship coefficient greater than the given threshold
 // 	https://www.cog-genomics.org/plink/2.0/distance#king_coefs
 
-	cap confirm file "${QC9}.bed"
+	cap confirm file "${QC9_10}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 8 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1	
 		
-		shell "$plink2path" --bfile "${QC7}" --king-cutoff $setking --make-bed --out "${QC9}"	//cut off the pair that is too closed
+		shell "$plink2path" --bfile "${QC7_10}" --king-cutoff $setking --make-bed --out "${QC9_10}"	//cut off the pair that is too closed
 		
 		timer off 1
 		qui timer list 1
@@ -554,7 +554,7 @@ foreach s of global sex{
 		timer clear 1
 		timer on 1	
 
-		shell "$plink2path" --bfile "${QC9}" --indep-pairwise $setwindow $setstep $setr2 --out "${QC10}"
+		shell "$plink2path" --bfile "${QC9_10}" --indep-pairwise $setwindow $setstep $setr2 --out "${QC10_10}"
 		
 		local stop 0
 		cap file close log
@@ -595,7 +595,7 @@ foreach s of global sex{
 
 
 		global pc1 = "${filename}B`ss'_pcs_with_ibd_${pcs}"   
-		shell "$plink2path" --bfile "${QC9}" --extract "${QC10}.prune.in" --pca $pcs approx --out "$pc1"
+		shell "$plink2path" --bfile "${QC9_10}" --extract "${QC10_10}.prune.in" --pca $pcs approx --out "$pc1"
 		
 		local stop 0
 		cap file close log
@@ -652,13 +652,13 @@ foreach s of global sex{
 // 	https://www.cog-genomics.org/plink/1.9/filter#indiv
 	
 	
-	cap confirm file "${QC0}.bed"
+	cap confirm file "${QC0_10}.bed"
 	if (_rc & ${nstart_from}==.) | (${nstart_from}<= 10 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1
 		
-		shell "$plink2path" --bfile "${QC9}" --keep "$keepfile" --make-bed --out "$QC0"
+		shell "$plink2path" --bfile "${QC9_10}" --keep "$keepfile" --make-bed --out "$QC0_10"
 		
 		timer off 1
 		qui timer list 1
@@ -739,7 +739,7 @@ foreach s of global sex{
 // 					--covar "${name2}.txt" --covar-name $covars --prune --variance-standardize ///
 // 					--linear intercept --out "${name3}"
 
-			shell "$plink2path" --bfile "${QC0}" --pheno "${name2}.txt" --pheno-name `p' ///
+			shell "$plink2path" --bfile "${QC0_10}" --pheno "${name2}.txt" --pheno-name `p' ///
 					--covar "${name2}.txt" --covar-name $covars --variance-standardize ///
 					--linear intercept  --out "${name3}"
 					
@@ -830,7 +830,7 @@ foreach s of global sex{
 				timer clear 1
 				timer on 1	
 
-				shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID ///
+				shell "$plinkpath" --bfile "${QC0_10}" --clump "${name4}.txt" --clump-snp-field ID ///
 						--clump-p1 `sl' --clump-p2 `sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
 						
 				timer off 1
@@ -886,7 +886,7 @@ foreach s of global sex{
 					qui import delimited "$check", delimiter(whitespace, collapse) case(preserve) clear 
 					qui keep SNP
 					qui export delimited using "${name8}.txt", nolab delimiter(tab) replace
-					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 3 6 9 header  ///
+					shell "$plinkpath" --bfile "${QC0_10}" --score "${name4}.txt" 3 6 9 header  ///
 							--extract "${name8}.txt" --out "${name9}"
 // 					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 2 4 9 header  ///
 // 							--extract "${name8}.txt" --out "${name9}"							
@@ -936,7 +936,7 @@ foreach s of global sex{
 					qui keep SNP A1
 					qui export delimited using "${name4}_SNP+A_only.txt", nolab delimiter(tab) replace
 					
-					shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
+					shell "$plinkpath" --bfile "${QC0_10}" --extract "${name8}.txt" ///
 							--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
 							--output-missing-genotype N --out "${name10}"
 							
