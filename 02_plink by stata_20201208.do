@@ -287,7 +287,8 @@ global vars ""
 			//gen 1/10 dataset
 			clear
 			qui import delimited "${QC3}", delimiter(whitespace, collapse) case(preserve) clear 
-			qui 
+			qui sample 10
+			qui export delimited using "${QC3}.txt", nolab delimiter(tab) replace
 			//
 			shell "$plink2path" --bfile "${QC3}" --remove "${QC4}.txt" --make-bed --out "${QC4}"
 			
