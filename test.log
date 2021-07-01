@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  D:\User_Data\Documents\GitHub\GWAS\test.log
   log type:  text
- opened on:  28 Jun 2021, 11:35:34
+ opened on:  28 Jun 2021, 11:38:39
 
 . 
 . clear all
@@ -22,8 +22,8 @@ E:\plink_2021_test_execution
 
 . 
 . // set data path
-. global data "E:\plink_2021_test_execution\combined_TWB1_TWB2\co
-> mbined.TWB1.TWB2.high.confidence.v1"
+. global data "E:\plink_2021_test_execution\combined.TWB1.TWB2.hi
+> gh.confidence.v1"
 
 . // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)
 > \TWBR10810-06_TWB1"
@@ -633,7 +633,7 @@ qc 4 & 5 skipped
 .                 qui timer list 1
 .                 local time1 = r(t1)/60
 .                 di "qc 9 used `time1'  minutes"
-qc 9 used .0164  minutes
+qc 9 used .00645  minutes
 .                 
 .                 local stop 0
 .                 cap file close log
@@ -668,4 +668,23 @@ end of do-file
 --Break--
 r(1);
 
-. exit, clear
+. do "D:\User_Data\Documents\GitHub\GWAS\02_plink by stata_202012
+> 08.do"
+
+. //20201105 9th version - test with TWB1
+. // Step 2. Plink Steps
+. 
+. log using "test.log",replace
+log file already open
+r(604);
+
+end of do-file
+
+r(604);
+
+. log close
+      name:  <unnamed>
+       log:  D:\User_Data\Documents\GitHub\GWAS\test.log
+  log type:  text
+ closed on:  28 Jun 2021, 11:41:36
+-----------------------------------------------------------------

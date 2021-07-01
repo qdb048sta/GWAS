@@ -7,21 +7,21 @@ clear all
 macro drop _all
 
 // set working directory
-cd "E:\plink_2021_test_execution"
+cd "K:\TWB"
 
 // set path for plink
 global plinkpath "D:\User_Data\Desktop\基因\plink\plink.exe"
 global plink2path "D:\User_Data\Desktop\基因\plink2\plink2.exe"
 
 // set data path
-global data "E:\plink_2021_test_execution\combined.TWB1.TWB2.high.confidence.v1"
+global data "K:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
 // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
 
 global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 // global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 
 
-global merged_survey "E:\plink_2021_test_execution\twbiobank_merged_20201109"  
+global merged_survey "K:\TWB\twbiobank_merged_20201109"  
 /*編號00 do檔製造出來的問卷資料*/
 
 global do01 "01_plink survey data input_20201116" /*編號01 do檔名稱/位置*/
