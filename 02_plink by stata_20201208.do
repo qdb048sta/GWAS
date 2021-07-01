@@ -141,7 +141,7 @@ global vars ""
 		local time1 = r(t1)/60
 		di "qc 1 used `time1'  minutes"
 		
-		local stop 0
+		local stop 0 //this pattern repeat over times
 		cap file close log
 		file open log using "${QC1}.log", read 
 		file read log line
@@ -180,7 +180,7 @@ global vars ""
 		local time1 = r(t1)/60
 		di "qc 2 used `time1'  minutes"
 		
-		local stop 0
+		local stop 0 
 		cap file close log
 		file open log using "${QC2}.log", read 
 		file read log line
@@ -284,6 +284,11 @@ global vars ""
 			qui keep if STATUS == "PROBLEM"
 			qui keep FID IID
 			qui export delimited using "${QC4}.txt", nolab delimiter(tab) replace
+			//gen 1/10 dataset
+			clear
+			qui import delimited "${QC3}", delimiter(whitespace, collapse) case(preserve) clear 
+			qui 
+			//
 			shell "$plink2path" --bfile "${QC3}" --remove "${QC4}.txt" --make-bed --out "${QC4}"
 			
 			local stop 0
