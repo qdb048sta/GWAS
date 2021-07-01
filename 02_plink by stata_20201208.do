@@ -15,6 +15,8 @@ global plink2path "D:\User_Data\Desktop\基因\plink2\plink2.exe"
 
 // set data path
 global data "K:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
+global data_one_tenth "K:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
+
 // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
 
 global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
@@ -103,7 +105,6 @@ global condition "AGE<=55"  /*if XXX, no need to enter sex, will generate 3 file
 global vars "`list'"
 global vars ""
 
-
 //=====================================================================================
 
 
@@ -121,20 +122,30 @@ global vars ""
 	global QC9 = "${filename}A_qc_09_relatedness_done"
 	global QC10 = "${filename}A_qc_10_pruned"
 	global QC0 = "${filename}A_qc_00_keep"
-
-
 	// remove SNPs with MAF under threshold
 // 	Minor allele frequencies/counts
 // 	--maf filters out all variants with minor allele frequency below the provided threshold (default 0.01)
 // 	https://www.cog-genomics.org/plink/1.9/filter#maf
+	global QC1_10 = "${filename}A_qc_01_10_maf"
+	global QC2_10 = "${filename}A_qc_02_10_missing"
+	global QC3_10 = "${filename}A_qc_03_10_biallelic"
+	global QC4_10 = "${filename}A_qc_04_10_sex"
+	global QC5_10= "${filename}A_qc_05_10_chrom"
+	global QC6_10= "${filename}A_qc_06_10_hwe"
+	global QC7_10= "${filename}A_qc_07_10_het"
+	global freq_10= "${filename}A_qc_10_10_freq"
+	global QC9_10= "${filename}A_qc_09_10_relatedness_done"
+	global QC10_10= "${filename}A_qc_10_10_pruned"
+	global QC0_10= "${filename}A_qc_00_10_keep"
 	
 	cap confirm file "${QC1}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1 & ${nstart_from}!=.) {
 
 		timer clear 1
 		timer on 1
+		shell "$plink2path" --bfile "${data}" --thin-indiv 0.1 --make-bed --out "${data_one_tenth}"	//select 1/10
+		shell "$plink2path" --bfile "${data_one_tenth}" --maf $setmaf --make-bed --out "${QC1}"	//filter out the data with provided threshold
 		
-		shell "$plink2path" --bfile "${data}" --maf $setmaf --make-bed --out "${QC1}"	//filter out the data with provided threshold
 		
 		timer off 1
 		qui timer list 1
@@ -284,12 +295,12 @@ global vars ""
 			qui keep if STATUS == "PROBLEM"
 			qui keep FID IID
 			qui export delimited using "${QC4}.txt", nolab delimiter(tab) replace
-			//gen 1/10 dataset
+			/*gen 1/10 dataset
 			clear
 			qui import delimited "${QC3}", delimiter(whitespace, collapse) case(preserve) clear 
 			qui sample 10
 			qui export delimited using "${QC3}.txt", nolab delimiter(tab) replace
-			//
+			*/
 			shell "$plink2path" --bfile "${QC3}" --remove "${QC4}.txt" --make-bed --out "${QC4}"
 			
 			local stop 0
