@@ -154,7 +154,7 @@ global vars ""
 		
 		local stop 0 //this pattern repeat over times
 		cap file close log
-		file open log using "${QC1}.log", read 
+		file open log using "${QC1_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -193,7 +193,7 @@ global vars ""
 		
 		local stop 0 
 		cap file close log
-		file open log using "${QC2}.log", read 
+		file open log using "${QC2_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -239,7 +239,7 @@ global vars ""
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC3}.log", read 
+		file open log using "${QC3_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -275,7 +275,7 @@ global vars ""
 			
 			local stop 0
 			cap file close log
-			file open log using "${QC4}.log", read 
+			file open log using "${QC4_10}.log", read 
 			file read log line
 			while r(eof)==0{
 				file read log line
@@ -305,7 +305,7 @@ global vars ""
 			
 			local stop 0
 			cap file close log
-			file open log using "${QC4}.log", read 
+			file open log using "${QC4_10}.log", read 
 			file read log line
 			while r(eof)==0{
 				file read log line
@@ -351,7 +351,7 @@ global vars ""
 		
 			local stop 0
 			cap file close log
-			file open log using "${QC5}.log", read 
+			file open log using "${QC5_10}.log", read 
 			file read log line
 			while r(eof)==0{
 				file read log line
@@ -469,7 +469,7 @@ global vars ""
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC7}.log", read 
+		file open log using "${QC7_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -506,7 +506,7 @@ global vars ""
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC9}.log", read 
+		file open log using "${QC9_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -558,7 +558,7 @@ foreach s of global sex{
 		
 		local stop 0
 		cap file close log
-		file open log using "${QC10}.log", read 
+		file open log using "${QC10_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
@@ -667,7 +667,7 @@ foreach s of global sex{
 
 		local stop 0
 		cap file close log
-		file open log using "${QC0}.log", read 
+		file open log using "${QC0_10}.log", read 
 		file read log line
 		while r(eof)==0{
 			file read log line
