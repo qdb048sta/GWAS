@@ -1,0 +1,1250 @@
+------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\user\Documents\GitHub\GWAS\test_new_computer_20210719_ch
+> ecking_pheno_missing.log
+  log type:  text
+ opened on:  19 Jul 2021, 15:06:52
+
+. 
+. clear all
+
+. macro drop _all
+
+. 
+. // set working directory
+. cd "C:\TWB_2021"
+C:\TWB_2021
+
+. 
+. // set path for plink
+. global plinkpath "C:\plink\plink.exe"
+
+. global plink2path "C:\plink2\plink2.exe"
+
+. 
+. // set data path
+. global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1
+> "
+
+. //global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.c
+> onfidence.v1_10"
+. 
+. // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06
+> _TWB1"
+. 
+. global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if 
+> enter "imputation"*/
+
+. // global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "
+> imputation"*/
+. 
+. 
+. global merged_survey "C:\TWB\twbiobank_merged_20201109"  
+
+. /*編號00 do檔製造出來的問卷資料*/
+. 
+. global do01 "01_plink survey data input_20201116" /*編號01 do檔名稱/位置*/
+
+. 
+. 
+. /*
+> global merged_survey "C:\Data\TWBioBank\twbiobank_merged_20201109"  
+> /*編號00 do檔製造出來的問卷資料*/
+> 
+> global do01 "C:\Data\TWBioBank\01_plink survey data input_20201208" /*編號01
+>  do檔名稱/位置*/
+> run "${do01}" /*select individuals*/
+> */
+. 
+. // -------------------------------------------------------------------------
+> -------
+. global filename = ""
+
+. local loc = strpos("$data", "TWB1")
+
+. if `loc'!=0{
+.     global filename = "TWB1_"
+. }
+
+. local loc = strpos("$data", "TWB2")
+
+. if `loc'!=0{
+.     global filename = "TWB2_"
+. }
+
+. local loc = strpos("$data", "combined")
+
+. if `loc'!=0{
+.     global filename = "TWB1+2_"
+. }
+
+. 
+. if "$datatype"=="imputation"{
+.     global filename = "${filename}imp_"
+. }
+
+. //--------------------------------------------------------------------------
+> -------
+. // start from certain step, options include "" and elements in `steps'
+. global start_from "QC0_keep" /*if "", detects whether files exist and start 
+> from latest step*/
+
+. 
+. local steps = "QC1_maf QC2_miss QC3_bi QC4_sex QC5_chrom QC6_hwe QC7_het QC9
+> _relate pca QC0_keep gwas clump prs recode"
+
+. 
+. global nstart_from .
+
+. local ct 0
+
+. foreach i of local steps{
+  2.         local ++ct
+  3.         if "`i'"=="${start_from}"{
+  4.                 global nstart_from `ct' 
+  5.         }
+  6. }
+
+. //--------------------------------------------------------------------------
+> -------
+. // set QC thresholds
+. global setmaf = 0.01      /*set minor allele frequency*/
+
+. global setgeno = 0.05     /*set genotype missingness*/
+
+. global setmind = 0.05     /*set individual missingness*/
+
+. global setking = 0.066    /*set individual relatedness*/
+
+.                                                   /*first-degree relations: 
+> 0.177; second-degree: 0.088; third-degree: 0.044; */
+.                                                   /*between second & third: 
+> 0.066*/
+. global setwindow = 500    /*set pruning window*/
+
+. global setstep = 5        /*set pruning step size*/
+
+. global setr2 = 0.2        /*set pruning R2*/
+
+. global setclumpr2 = 0.5   /*set clumping R2*/
+
+. global setclumpkb = 250   /*set clumping distance in kilobase*/
+
+. 
+. // set number of principal components
+. global pcs 10
+
+. 
+. // set phenotypes
+. //global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
+. global phenos "lbody_height"
+
+. 
+. // global phenos "eduyrs"
+. 
+. // set significant levels (p-values) for clumping
+. global siglevel_list "0.00000005 0.000001"
+
+. global siglevel_list "0.000001"
+
+. 
+. // global siglevel_list "0.000001"
+. 
+. // set sex
+. global sex "_m _f _a" /*f for female, m for male, a for all*/
+
+. // global sex "_a"
+. 
+. // set conditions
+. global condition "AGE<=55"  /*if XXX, no need to enter sex, will generate 3 
+> files (male, female, all)*/
+
+. 
+. // local list "FID IID SEX AGE birth_year BODY_HEIGHT BODY_WEIGHT lbody_heig
+> ht BMI eduyrs inc_self_mid inc_family_mid"
+. global vars "`list'"
+
+. global vars ""
+
+. 
+. //==========================================================================
+> ===========
+. 
+.         /*
+>         QC steps
+>         */ 
+.         global QC1 = "${filename}A_qc_01_maf"
+
+.         global QC2 = "${filename}A_qc_02_missing"
+
+.         global QC3 = "${filename}A_qc_03_biallelic"
+
+.         global QC4 = "${filename}A_qc_04_sex"
+
+.         global QC5 = "${filename}A_qc_05_chrom"
+
+.         global QC6 = "${filename}A_qc_06_hwe"
+
+.         global QC7 = "${filename}A_qc_07_het"
+
+.         global freq = "${filename}A_qc_freq"
+
+.         global QC9 = "${filename}A_qc_09_relatedness_done"
+
+.         global QC10 = "${filename}A_qc_10_pruned"
+
+.         global QC0 = "${filename}A_qc_00_keep"
+
+. 
+. 
+.         // remove SNPs with MAF under threshold
+. //      Minor allele frequencies/counts
+. //      --maf filters out all variants with minor allele frequency below the
+>  provided threshold (default 0.01)
+. //      https://www.cog-genomics.org/plink/1.9/filter#maf
+.         
+.         cap confirm file "${QC1}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1
+.                 //shell "$plink2path" --bfile "${data}" --thin-indiv 0.1 --m
+> ake-bed --out "${data_one_tenth}"   //select 1/10
+.                 shell "$plink2path" --bfile "${data}" --maf $setmaf --make-b
+> ed --out "${QC1}"   //filter out the data with provided threshold
+.                 
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 1 used `time1'  minutes"
+.                 
+.                 local stop 0 //this pattern repeat over times
+.                 cap file close log
+.                 file open log using "${QC1}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // remove SNPs and individuals with genotype calls and genotype miss
+> ingness less than thresholds
+. //      Missing genotype rates
+. //      --geno filters out all variants with missing call rates exceeding th
+> e provided value 
+. //      (default 0.1) to be removed, while --mind does the same for samples.
+. //      https://www.cog-genomics.org/plink/1.9/filter#missing
+.         
+.         cap confirm file "${QC2}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 2 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1
+.                 
+.                 shell "$plink2path" --bfile "${QC1}" --geno $setgeno --mind 
+> $setmind --make-bed --out "${QC2}" //超過0.01 missing 會被filter  --mind do 
+> the same thing
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 2 used `time1'  minutes"
+.                 
+.                 local stop 0 
+.                 cap file close log
+.                 file open log using "${QC2}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // remove SNPs that are not biallelic (雙等位基因)
+. //      By default, all variants are loaded; when more than one alternate al
+> lele is present,
+. //      the reference allele and the most common alternate are tracked (ties
+>  broken in favor 
+. //      of the lower-numbered allele) and the rest are coded as missing call
+> s. To simply skip all
+. //      variants where at least two alternate alleles are present in the dat
+> aset, use --biallelic-only.
+. //      https://www.cog-genomics.org/plink/1.9/input#vcf_filter
+. //      
+. //      --snps-only excludes all variants with one or more multi-character a
+> llele codes. With 'just-acgt', 
+. //      variants with single-character allele codes outside of {'A', 'C', 'G
+> ', 'T', 'a', 'c', 'g', 't', 
+. //      <missing code>} are also excluded.
+. //      https://www.cog-genomics.org/plink/1.9/filter#snps_only
+.         
+.         cap confirm file "${QC3}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 3 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+. //              shell "$plinkpath" --bfile "${QC2}" --snps-only just-acgt --
+> biallelic-only strict list --make-bed --out "${QC3}"        
+.                 shell "$plink2path" --bfile "${QC2}" --snps-only just-acgt -
+> -max-alleles 2 --make-bed --out "${QC3}"    //這些有male bed的都是filtering 
+> data
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 3 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC3}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         local nextfile = "${QC3}"
+
+.         if "$datatype" != "imputation"{
+.                 cap confirm file "${QC4}.bed"
+.                 if (_rc & ${nstart_from}==.)| (${nstart_from}<= 4 & ${nstart
+> _from}!=.) {
+. 
+.                         // check if reported sex is the same as imputed sex 
+> from genetic data, remove individual if not
+. //                      Sex imputation
+. //                      --check-sex normally compares sex assignments in the
+>  input dataset with those
+. //                      imputed from X chromosome inbreeding coefficients, a
+> nd writes a report to plink.sexcheck.
+. //                  https://www.cog-genomics.org/plink/1.9/basic_stats#check
+> _sex
+.                         
+.                         timer clear 1
+.                         timer on 1      
+.                         
+.                         shell "$plinkpath" --bfile "${QC3}" --check-sex --ou
+> t "${QC4}"
+.                         
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC4}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+.                         
+.                         qui import delimited "${QC4}.sexcheck", delimiter(wh
+> itespace, collapse) case(preserve) clear 
+.                         qui keep if STATUS == "PROBLEM"
+.                         qui keep FID IID
+.                         qui export delimited using "${QC4}.txt", nolab delim
+> iter(tab) replace
+.                         /*gen 1/10 dataset
+>                         clear
+>                         qui import delimited "${QC3}", delimiter(whitespace,
+>  collapse) case(preserve) clear 
+>                         qui sample 10
+>                         qui export delimited using "${QC3}.txt", nolab delim
+> iter(tab) replace
+>                         */
+.                         shell "$plink2path" --bfile "${QC3}" --remove "${QC4
+> }.txt" --make-bed --out "${QC4}"
+.                         
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC4}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+. 
+.                         timer off 1
+.                         qui timer list 1
+.                         local time1 = r(t1)/60
+.                         di "qc 4 used `time1'  minutes"
+.                         
+.                 }
+.                 
+.                 
+.                 // keep chromosomes 1-22 only 
+. //      Chromosomes
+. //      --chr excludes all variants not on the listed chromosome(s). 
+. //      Normally, valid choices for humans are 0 (i.e. unknown), 1-22, X, Y,
+>  XY 
+. //      (pseudo-autosomal region of X; see --split-x/--merge-x), and MT.
+. //      https://www.cog-genomics.org/plink/1.9/filter#chr
+.         
+.                 cap confirm file "${QC5}.bed"
+.                 if (_rc & ${nstart_from}==.)| (${nstart_from}<= 5 & ${nstart
+> _from}!=.) {
+. 
+.                         timer clear 1
+.                         timer on 1      
+.                         
+.                         shell "$plink2path" --bfile "${QC4}" --chr 1-22 --ma
+> ke-bed --out "${QC5}"       //still filtering out stuff
+.                         
+.                         timer off 1
+.                         qui timer list 1
+.                         local time1 = r(t1)/60
+.                         di "qc 5 used `time1'  minutes"
+.                 
+.                         local stop 0
+.                         cap file close log
+.                         file open log using "${QC5}.log", read 
+.                         file read log line
+.                         while r(eof)==0{
+  2.                                 file read log line
+  3.                                 local a =word(`"`line'"', 1)
+  4.                                 if "`a'" == "Error:"{
+  5.                                         local stop 1
+  6.                                         di `"`line'"'   
+  7.                                 }
+  8.                         }
+.                         file close log
+.                         
+.                         if `stop'==1{
+.                                 error 1 /*force break*/
+.                         }
+. 
+.                 }
+.                 
+.                 local nextfile = "${QC5}"
+.         }
+
+.         
+.         
+.         if "`nextfile'"=="${QC3}"{
+.                 di "qc 4 & 5 skipped"
+qc 4 & 5 skipped
+.         }
+
+.         
+.         
+.         // keep only SNPs that does not deviate from hardy-weinberg equilibr
+> ium 
+. //      Hardy-Weinberg equilibrium tests 一個群體在理想情況（不受特定的干擾
+> 因素影響，如非隨機交配、天擇、族群遷移、突變或群體大小有限）
+. //，經過多個世代，基因頻率與基因型頻率會保持恆定並處於穩定的平衡狀態
+. //      --hwe filters out all variants which have Hardy-Weinberg equilibrium
+>  exact 
+. //      test p-value below the provided threshold.
+. //  https://www.cog-genomics.org/plink/1.9/filter#hwe
+.         
+.         cap confirm file "${QC6}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 6 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plink2path" --bfile "`nextfile'" --hwe 1e-6 --make-b
+> ed --out "${QC6}" //filter out data failed Hardy Weinberg test
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 6 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC6}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'   
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+. 
+.         // exclude individuals with heterozygosity rates that are too high o
+> r too low   heterz
+. //      Inbreeding
+. //      --het computes observed and expected autosomal homozygous genotype c
+> ounts 
+. //      for each sample, and reports method-of-moments F coefficient estimat
+> es 
+. //      (i.e. (<observed hom. count> - <expected count>) / (<total observati
+> ons> - <expected count>)) to plink.het. 
+. //  https://www.cog-genomics.org/plink/1.9/basic_stats#ibc
+.         
+.         cap confirm file "${QC7}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 7 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plinkpath" --bfile "${QC6}" --missing --het --out "$
+> {QC7}"    //give report on missing sample and variant report
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC7}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+.                 
+.                 qui import delimited "${QC7}.het", delimiter(whitespace, col
+> lapse) case(preserve) clear 
+.                 qui g het_rate = (NNM-OHOM)/NNM
+.                 qui sum het_rate
+.                 local mean = r(mean)
+.                 local std = r(sd)
+.                 local upper_bound = `mean' + 3*`std'
+.                 local lower_bound = `mean' - 3*`std'
+.                 qui keep if het_rate > `upper_bound' | het_rate < `lower_bou
+> nd'
+.                 qui export delimited using "${QC7}.txt", nolab delimiter(tab
+> ) replace   
+.                 shell "$plink2path" --bfile "${QC6}" --remove "${QC7}.txt" -
+> -make-bed --out "${QC7}"
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 7 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC7}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.         
+.         // kinship based pruning  
+. //      --king-cutoff excludes one member of each pair of samples with kinsh
+> ip coefficient greater than the given threshold
+. //      https://www.cog-genomics.org/plink/2.0/distance#king_coefs
+. 
+.         cap confirm file "${QC9}.bed"
+
+.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 8 & ${nstart_from}!=
+> .) {
+. 
+.                 timer clear 1
+.                 timer on 1      
+.                 
+.                 shell "$plink2path" --bfile "${QC7}" --king-cutoff $setking 
+> --make-bed --out "${QC9}"   //cut off the pair that is too closed
+.                 
+.                 timer off 1
+.                 qui timer list 1
+.                 local time1 = r(t1)/60
+.                 di "qc 9 used `time1'  minutes"
+.                 
+.                 local stop 0
+.                 cap file close log
+.                 file open log using "${QC9}.log", read 
+.                 file read log line
+.                 while r(eof)==0{
+  2.                         file read log line
+  3.                         local a =word(`"`line'"', 1)
+  4.                         if "`a'" == "Error:"{
+  5.                                 local stop 1
+  6.                                 di `"`line'"'
+  7.                         }
+  8.                 }
+.                 file close log
+.                 
+.                 if `stop'==1{
+.                         error 1 /*force break*/
+.                 }
+. 
+.         }
+
+.                         
+. //==========================================================================
+> =====================================================               
+.                 
+.         //------------------------------------------------------------------
+> ----------------------------------  
+.         
+. foreach s of global sex{
+  2.         local ss `s'
+  3.         global keepfile = "02_twb1+2_input`ss'_30K_20201116.txt"
+  4.         
+.         
+.         /*
+>         obtain principal components: using SNPs not in LD, obtain eigenvecto
+> rs as the PCs
+>         */ 
+.         // LD:  連鎖不平衡性是指在兩個或者多個位點上的非隨機關聯性，這些位點
+> 既可能在同一條染色體上
+. //      These commands produce a pruned subset of markers that are in approx
+> imate linkage equilibrium with each other, 
+. //      writing the IDs to plink.prune.in (and the IDs of all excluded varia
+> nts to plink.prune.out).
+. //      --indep-pairwise is the simplest approach, which only considers corr
+> elations between unphased-hardcall 
+. //      allele counts. It takes three parameters: a required window size in 
+> variant count or kilobase 
+. //      (if the 'kb' modifier is present) units, an optional variant count t
+> o shift the window at the end of each 
+. //      step (default 1, and now required to be 1 when a kilobase window is 
+> used), and a required r2 threshold. 
+. //      At each step, pairs of variants in the current window with squared c
+> orrelation greater than the threshold are 
+. //      noted, and variants are greedily pruned from the window until no suc
+> h pairs remain.
+. //      https://www.cog-genomics.org/plink/2.0/ld#indep
+. 
+.         global name2 = "${filename}B_gwas`ss'_covar+`pcs'pc"
+  5.         cap confirm file "${name2}.txt"
+  6.         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 9 & ${nstart_from
+> }!=.) {
+  7. 
+.                 timer clear 1
+  8.                 timer on 1      
+  9. 
+.                 shell "$plink2path" --bfile "${QC9}" --indep-pairwise $setwi
+> ndow $setstep $setr2 --out "${QC10}"
+ 10.                 
+.                 local stop 0
+ 11.                 cap file close log
+ 12.                 file open log using "${QC10}.log", read 
+ 13.                 file read log line
+ 14.                 while r(eof)==0{
+ 15.                         file read log line
+ 16.                         local a =word(`"`line'"', 1)
+ 17.                         if "`a'" == "Error:"{
+ 18.                                 local stop 1
+ 19.                                 di `"`line'"'   
+ 20.                         }
+ 21.                 }
+ 22.                 file close log
+ 23.                 
+.                 if `stop'==1{
+ 24.                         error 1 /*force break*/
+ 25.                 }
+ 26. 
+.                 local pcs1 = ${pcs}-1
+ 27.                 global pclist = ""
+ 28.                 if ${pcs} !=0{
+ 29.                         foreach i of numlist 1/`pcs1'{
+ 30.                                 global pclist = "$pclist PC`i',"
+ 31.                         }
+ 32.                         global pclist = "$pclist PC${pcs}"
+ 33.                 }
+ 34.                 
+. //      Population stratification
+. //      --pca extracts top principal components from the variance-standardiz
+> ed relationship matrix (top 20 principle components) 
+. //      computed by --make-rel/--make-grm-{bin,list}.
+. //  The 'approx' modifier causes the standard deterministic computation to b
+> e replaced 
+. //  with the randomized algorithm originally implemented for Galinsky KJ, Bh
+> atia G, Loh PR, 
+. //  Georgiev S, Mukherjee S, Patterson NJ, Price AL (2016) Fast Principal-Co
+> mponent Analysis 
+. //  Reveals Convergent Evolution of ADH1B in Europe and East Asia. This can 
+> be a good idea 
+. //  when you have >5000 samples, and is almost required once you have >50000
+> .
+. //      https://www.cog-genomics.org/plink/2.0/strat#pca        
+. 
+. 
+.                 global pc1 = "${filename}B`ss'_pcs_with_ibd_${pcs}"   
+ 35.                 shell "$plink2path" --bfile "${QC9}" --extract "${QC10}.p
+> rune.in" --pca $pcs approx --out "$pc1"
+ 36.                 
+.                 local stop 0
+ 37.                 cap file close log
+ 38.                 file open log using "${pc1}.log", read 
+ 39.                 file read log line
+ 40.                 while r(eof)==0{
+ 41.                         file read log line
+ 42.                         local a =word(`"`line'"', 1)
+ 43.                         if "`a'" == "Error:"{
+ 44.                                 local stop 1
+ 45.                                 di `"`line'"'   
+ 46.                         }
+ 47.                 }
+ 48.                 file close log
+ 49.                 
+.                 if `stop'==1{
+ 50.                         error 1 /*force break*/
+ 51.                 }
+ 52.                 
+.                 if `stop'==1{
+ 53.                         error 1 /*force break*/
+ 54.                 }
+ 55.                 
+.                 qui import delimited "${pc1}.eigenvec", delimiter(whitespace
+> , collapse) case(preserve) clear 
+ 56.                 tempfile mergefile
+ 57.                 qui save `mergefile'
+ 58.                 
+.                 
+.                 qui import delimited "$keepfile", case(preserve) encoding(UT
+> F-8) clear 
+ 59.                 keep if $condition
+ 60.                 
+.                 if "$vars"!=""{
+ 61.                     keep $vars
+ 62.                 }
+ 63.                 
+.                 qui merge 1:1 IID using `mergefile', nogen keep(match)
+ 64.                 qui export delimited using "${name2}.txt", nolab delimite
+> r(tab) replace
+ 65. 
+.                 timer off 1
+ 66.                 qui timer list 1
+ 67.                 local time1 = r(t1)/60
+ 68.                 di "calculate pc used `time1'  minutes"
+ 69. 
+.         }
+ 70. 
+. 
+. //  QC0 
+.         // keep only individuals with survey data 
+. //      ID lists
+. //      --keep accepts one or more space/tab-delimited text files with sampl
+> e IDs, 
+. //      and removes all unlisted samples from the current analysis; --remove
+>  does the same for all listed samples.
+. //      --extract normally accepts one or more text file(s) with variant IDs
+>  (usually one per line, 
+. //      but it's okay for them to just be separated by spaces), and removes 
+> all unlisted variants from the current analysis.
+. //      https://www.cog-genomics.org/plink/1.9/filter#indiv
+.         
+.         
+.         cap confirm file "${QC0}.bed"
+ 71.         if (_rc & ${nstart_from}==.) | (${nstart_from}<= 10 & ${nstart_fr
+> om}!=.) {
+ 72. 
+.                 timer clear 1
+ 73.                 timer on 1
+ 74.                 
+.                 shell "$plink2path" --bfile "${QC9}" --keep "$keepfile" --ma
+> ke-bed --out "$QC0"
+ 75.                 
+.                 timer off 1
+ 76.                 qui timer list 1
+ 77.                 local time1 = r(t1)/60
+ 78.                 di "qc 0 used `time1'  minutes"                 
+ 79. 
+.                 local stop 0
+ 80.                 cap file close log
+ 81.                 file open log using "${QC0}.log", read 
+ 82.                 file read log line
+ 83.                 while r(eof)==0{
+ 84.                         file read log line
+ 85.                         local a =word(`"`line'"', 1)
+ 86.                         if "`a'" == "Error:"{
+ 87.                                 local stop 1
+ 88.                                 di `"`line'"'   
+ 89.                         }
+ 90.                 }
+ 91.                 file close log
+ 92.                 
+.                 if `stop'==1{
+ 93.                         error 1 /*force break*/
+ 94.                 }
+ 95.         }
+ 96.         
+.         
+.         /*
+>         run GWAS
+>         */ 
+. //      Regression with multiple covariates - Plink 1.9
+. //      Given a quantitative phenotype and possibly some covariates (in a --
+> covar file), 
+. //      --linear writes a linear regression report to plink.assoc.linear. Si
+> milarly, 
+. //      --logistic performs logistic regression given a case/control phenoty
+> pe and some covariates.
+. //      https://www.cog-genomics.org/plink/1.9/assoc#linear
+. 
+. //      Association analysis - Plink 2.0
+. //      Linear and logistic/Firth regression with covariates
+. //      --glm is PLINK 2.0's primary association analysis command.
+. //      https://www.cog-genomics.org/plink/2.0/assoc#glm
+.         
+. //      Phenotype encoding
+. //      --input-missing-phenotype <integer>
+. //      --no-input-missing-phenotype
+. //      Missing case/control or quantitative phenotypes are expected to be e
+> ncoded as 
+. //      'NA'/'nan' (any capitalization) or -9. (Other strings which don't st
+> art with a number 
+. //      are now interpreted as categorical phenotype/covariate values.) You 
+> can change the 
+. //      numeric missing phenotype code to another integer with --input-missi
+> ng-phenotype, 
+. //      or just disable -9 with --no-input-missing-phenotype.
+. //  https://www.cog-genomics.org/plink/2.0/input#input_missing_phenotype
+.         
+. //      Covariates (other factors that might impact the phenotype)
+. //      --covar designates the file to load covariates from. The file format
+>  is the same as for --pheno
+. //      https://www.cog-genomics.org/plink/2.0/input#covar
+. 
+.         
+.         foreach p of global phenos{
+ 97.                 global name3 = "${filename}C_gwas`ss'_`p'_${pcs}pc"
+ 98.                 global name4 = "${name3}_wo_covar"
+ 99.                 
+.                 cap confirm file "${name4}.txt"
+100.                 if (_rc & ${nstart_from}==.)| (${nstart_from}<= 11 & ${ns
+> tart_from}!=.) {
+101. 
+.                         timer clear 1
+102.                         timer on 1      
+103. 
+.                         
+.                         global covars = "birth_year"
+104.                         if "`s'"=="`_a'"{
+105.                                 global covars = "birth_year, SEX"
+106.                         }
+107.                         
+.                         if ${pcs}!=0{
+108.                                 global covars = "${covars}, ${pclist}"
+109.                         }       
+110.                         
+. //                      shell "$plink2path" --bfile "${QC0}" --pheno "${name
+> 2}.txt" --pheno-name `p' ///
+. //                                      --covar "${name2}.txt" --covar-name 
+> $covars --prune --variance-standardize ///
+. //                                      --linear intercept --out "${name3}"
+. 
+.                         shell "$plink2path" --bfile "${QC0}" --pheno "${name
+> 2}.txt" --pheno-name `p' ///
+>                                         --covar "${name2}.txt" --covar-name 
+> $covars --variance-standardize ///
+>                                         --linear intercept  --out "${name3}"
+111.                                         
+. //                      shell "$plinkpath" --bfile "${QC9}" --pheno "${name2
+> }.txt" --pheno-name `p' ///
+. //                                      --covar "${name2}.txt" --covar-name 
+> $covars --missing-phenotype -9 ///
+. //                                      --linear intercept --out "${name3}"
+. 
+.                         timer off 1
+112.                         qui timer list 1
+113.                         local time1 = r(t1)/60
+114.                         di "gwas `p' used `time1'  minutes"
+115.                         
+.                         local stop 0
+116.                         cap file close log
+117.                         file open log using "${name3}.log", read 
+118.                         file read log line
+119.                         while r(eof)==0{
+120.                                 file read log line
+121.                                 local a =word(`"`line'"', 1)
+122.                                 if "`a'" == "Error:"{
+123.                                         local stop 1
+124.                                         di `"`line'"'   
+125.                                 }
+126.                         }
+127.                         file close log
+128.                         
+.                         if `stop'==1{
+129.                                 error 1 /*force break*/
+130.                         }
+131.                                         
+.                         
+.                         // select GWAS output file -- unknown extension othe
+> r than .log, .png and .txt
+.                         local file: dir . files "${name3}*"
+132.                         global gwas_output ""
+133.                         foreach f of local file{
+134.                                 local pos = strrpos("`f'", ".")
+135.                                 local ext = usubstr("`f'", `pos', .)
+136.                                 if  !inlist("`ext'", ".log", ".png", ".tx
+> t") {
+137.                                         global gwas_output "`f'"
+138.                                 }
+139.                         }
+140.                         
+.                         // keep betas for the SNPs only
+.                         qui import delimited "$gwas_output", delimiter(white
+> space, collapse) case(preserve) clear 
+141.                         cap qui drop v*
+142.                         qui keep if TEST=="ADD"
+143.                         qui export delimited using "${name4}.txt", nolab 
+> delimiter(tab) replace
+144. 
+.                 }
+145.                 
+.                 
+.                 /*
+>                 manhattan plot
+> 
+>                 manhattan CHR BP P, title("`p'")                
+>                 */ 
+.                 
+.                 
+.                 /*
+>                 clumping
+>                 */ 
+. //              LD-based result clumping
+. //              When there are multiple significant association p-values in 
+> the same region, 
+. //              LD should be taken into account when interpreting the result
+> s. 
+. //              The --clump command is designed to help with this.
+. //              --clump loads the named PLINK-format association report(s) 
+. //              (text files with a header line, a column containing variant 
+> IDs, and another column containing p-values) 
+. //              and groups results into LD-based clumps, writing a new repor
+> t to plink.clumped.
+. //              https://www.cog-genomics.org/plink/1.9/postproc#clump
+.                 
+.                 foreach sl of global siglevel_list{
+146.                         local sig = "`sl'"
+147.                         if "`sl'"=="0.000001"{
+148.                                 local sig = "1e-6"
+149.                         }
+150.                         if "`sl'"=="0.00000005"{
+151.                                 local sig = "5e-8"
+152.                         }
+153.                         
+.                         
+.                         global name7 = "${filename}D_gwas`ss'_clumped_`p'_pc
+> ${pcs}_sl`sig'"
+154.                         global name8 = "${name7}_index_SNPs"
+155.                         global check = "${name7}.clumped"
+156. 
+.                         cap confirm file "$check"
+157.                         if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1
+> 2 & ${nstart_from}!=.) {
+158. 
+.                                 timer clear 1
+159.                                 timer on 1      
+160. 
+.                                 //shell "$plinkpath" --bfile "${QC0}" --clum
+> p "${name4}.txt" --clump-snp-field ID /// (problems might come from here bec
+> ause of no --pheno)
+.                                 //              --clump-p1 `sl' --clump-p2 `
+> sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
+.                                 shell "$plinkpath" --bfile "${QC0}" --clump 
+> "${name4}.txt" --clump-snp-field ID --pheno "${name2}.txt" --pheno-name `p' 
+> ///
+>                                                 --clump-p1 `sl' --clump-p2 `
+> sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
+161.                                                 
+.                                 timer off 1
+162.                                 qui timer list 1
+163.                                 local time1 = r(t1)/60
+164.                                 di "clump `ss' `p' `sig' used `time1'  mi
+> nutes"
+165.                                 
+.                                 local stop 0
+166.                                 cap file close log
+167.                                 file open log using "${name7}.log", read 
+168.                                 file read log line
+169.                                 while r(eof)==0{
+170.                                         file read log line
+171.                                         local a =word(`"`line'"', 1)
+172.                                         if "`a'" == "Error:"{
+173.                                                 local stop 1
+174.                                                 di `"`line'"'   
+175.                                         }
+176.                                 }
+177.                                 file close log
+178.                                 
+.                                 if `stop'==1{
+179.                                         error 1 /*force break*/
+180.                                 }
+181. 
+.                         }               
+182.                                                                 
+.                         capture confirm file "$check"
+183.                         if _rc{
+184.                                 di "    no significant SNP for `p' GWAS p
+> <`sig'"
+185.                         }
+186. 
+.                         if !_rc{
+187.                                 global name9 = "${filename}E_prs`ss'_`p'_
+> pc${pcs}_sl`sig'"
+188.                                 capture confirm file "${name9}.profile"
+189.                                 if (_rc & ${nstart_from}==.)| (${nstart_f
+> rom}<= 13 & ${nstart_from}!=.) {
+190.                 
+.                                         /*
+>                                         calculate PRS with SNPs with p-value
+> s under threshold
+>                                         */
+. //                                      additive effect estimates for a quan
+> titative trait
+. //                                      The --score flag performs this funct
+> ion, writing results to plink.profile
+. //                                      The input file should have one line 
+> per scored variant. By default, the variant ID is read from column 1, 
+. //                                      an allele code is read from the foll
+> owing column, and the score associated with the named allele is read 
+. //                                      from the column after the allele col
+> umn; you can change these positions by passing column numbers to --score.
+. //                                      e.g. --score my.scores 2 4 9
+. //                                      reads variant IDs from column 3, all
+> ele codes from column 2, and scores from column 1.
+. //                                      https://www.cog-genomics.org/plink/1
+> .9/score
+.                                         
+.                                         timer clear 1
+191.                                         timer on 1      
+192. 
+.                                         qui import delimited "$check", delim
+> iter(whitespace, collapse) case(preserve) clear 
+193.                                         qui keep SNP
+194.                                         qui export delimited using "${nam
+> e8}.txt", nolab delimiter(tab) replace
+195.                                         //shell "$plinkpath" --bfile "${Q
+> C0}" --score "${name4}.txt" 3 6 9 header  ///
+.                                         //              --extract "${name8}.
+> txt" --out "${name9}" this one does not have pheno
+.                                         shell "$plinkpath" --bfile "${QC0}" 
+> --pheno "${name2}.txt" --pheno-name `p' --score "${name4}.txt" 3 6 9 header 
+>  ///
+>                                                         --extract "${name8}.
+> txt" --out "${name9}"
+196. //                                      shell "$plinkpath" --bfile "${QC0
+> }" --score "${name4}.txt" 2 4 9 header  ///
+. //                                                      --extract "${name8}.
+> txt" --out "${name9}"                                                       
+.                                         timer off 1
+197.                                         qui timer list 1
+198.                                         local time1 = r(t1)/60
+199.                                         di "calculate prs `ss' `p' `sig' 
+> used `time1'  minutes"
+200.                                         
+.                                         local stop 0
+201.                                         cap file close log
+202.                                         file open log using "${name9}.log
+> ", read 
+203.                                         file read log line
+204.                                         while r(eof)==0{
+205.                                                 file read log line
+206.                                                 local a =word(`"`line'"',
+>  1)
+207.                                                 if "`a'" == "Error:"{
+208.                                                         local stop 1
+209.                                                         di `"`line'"'
+210.                                                 }
+211.                                         }
+212.                                         file close log
+213.                                         
+.                                         if `stop'==1{
+214.                                                 error 1 /*force break*/
+215.                                         }
+216. 
+.                                 }               
+217.                                 
+.                                 /*
+>                                 recode file: calculate number of reference a
+> lleles for index SNPs for individuals with survey data
+>                                 */
+. //                              --recode creates a new text fileset, after a
+> pplying sample/variant filters and other operations.
+. //                              By default, A1 alleles are counted; this can
+>  be customized with --recode-allele. 
+. //                              --recode-allele's input file should have var
+> iant IDs in the first column and allele IDs in the second.
+. //                              https://www.cog-genomics.org/plink/1.9/data#
+> recode
+.                                 
+.                                 global name10 = "${filename}F_gwas`ss'_`p'_p
+> c${pcs}_sl`sig'_recoded"                                            
+218.                                 capture confirm file "${name10}.raw"
+219.                                 if (_rc & ${nstart_from}==.)| (${nstart_f
+> rom}<= 14 & ${nstart_from}!=.) {
+220. 
+.                                         timer clear 1
+221.                                         timer on 1      
+222. 
+.                                         qui import delimited "${name4}.txt",
+>  case(preserve) clear 
+223.                                         
+.                                         cap rename ID SNP
+224.                                         qui keep SNP A1
+225.                                         qui export delimited using "${nam
+> e4}_SNP+A_only.txt", nolab delimiter(tab) replace
+226.                                         
+.                                         //shell "$plinkpath" --bfile "${QC0}
+> " --extract "${name8}.txt" ///
+.                                         //              --recode A tab --rec
+> ode-allele "${name4}_SNP+A_only.txt" ///
+.                                         //              --output-missing-gen
+> otype N --out "${name10}"
+.                                         //shell "$plinkpath" --bfile "${QC0}
+> " --extract "${name8}.txt" ///
+.                                         //              --recode A tab --rec
+> ode-allele "${name4}_SNP+A_only.txt" ///
+.                                         //              --output-missing-gen
+> otype N --out "${name10}"
+.                                         shell "$plinkpath" --bfile "${QC0}" 
+> --pheno "${name2}.txt" --pheno-name `p' --extract "${name8}.txt" ///
+>                                                         --recode A tab --rec
+> ode-allele "${name4}_SNP+A_only.txt" ///
+>                                                         --output-missing-gen
+> otype N --out "${name10}"
+227.                                                         
+.                                         timer off 1
+228.                                         qui timer list 1
+229.                                         local time1 = r(t1)/60
+230.                                         di "recode data `ss' `p' `sig' us
+> ed `time1'  minutes"
+231.                                         
+.                                         local stop 0
+232.                                         cap file close log
+233.                                         file open log using "${name10}.lo
+> g", read 
+234.                                         file read log line
+235.                                         while r(eof)==0{
+236.                                                 file read log line
+237.                                                 local a =word(`"`line'"',
+>  1)
+238.                                                 if "`a'" == "Error:"{
+239.                                                         local stop 1
+240.                                                         di `"`line'"'   
+241.                                                 }
+242.                                         }
+243.                                         file close log
+244.                                         
+.                                         if `stop'==1{
+245.                                                 error 1 /*force break*/
+246.                                         }
+247. 
+.                                 }
+248. 
+.                         }/*file exist*/
+249.                         
+.                 }/*sl*/         
+250.                 di "--------------------------------"
+251.         }/*pheno*/
+252.         di "========================================="
+253. }/*sex*/
+qc 0 used .1180333333333333  minutes
+Error: Failed to open TWB1+2_imp_A_qc_00_keep.bed : Invalid argument.
+--Break--
+r(1);
+
+end of do-file
+
+--Break--
+r(1);
+
+. do "C:\Users\user\Documents\GitHub\GWAS\02_plink by stata_20201208.do"
+
+. //20201105 9th version - test with TWB1
+. // Step 2. Plink Steps
+. 
+. log using "test_new_computer_20210719_checking_pheno_missing.log",replace
+log file already open
+r(604);
+
+end of do-file
+
+r(604);
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\user\Documents\GitHub\GWAS\test_new_computer_20210719_ch
+> ecking_pheno_missing.log
+  log type:  text
+ closed on:  19 Jul 2021, 15:26:55
+------------------------------------------------------------------------------

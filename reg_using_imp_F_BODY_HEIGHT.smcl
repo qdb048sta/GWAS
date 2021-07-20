@@ -1,0 +1,42 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\user\Documents\GitHub\GWAS\reg_using_imp_F_BODY_HEIGHT.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}18 Jul 2021, 20:00:30
+{txt}
+{com}. //import delimited "C:\TWB_2021\TWB1+2_imp_F_gwas_m_BODY_HEIGHT_pc10_sl1e-6_recoded.raw", delimiter(whitespace, collapse) case(preserve) clear
+. import delimited "C:\TWB_2021\TWB1+2_imp_F_gwas_m_BODY_HEIGHT_pc10_sl1e-6_recoded_csv.csv", clear
+{res}{text}(9 vars, 42,550 obs)
+
+{com}. //drop if rs77799048_t=="NA"
+. //drop if rs77799048_t=="NA"
+. //replace rs77799058_t=int(rs77799048_t)
+. drop if  phenotype<0
+{txt}(33,131 observations deleted)
+
+{com}. reg phenotype rs*
+
+{txt}      Source {c |}       SS           df       MS      Number of obs   ={res}     9,370
+{txt}{hline 13}{c +}{hline 34}   F(2, 9367)      = {res}    22.83
+{txt}       Model {c |} {res} 1628.74519         2  814.372594   {txt}Prob > F        ={res}    0.0000
+{txt}    Residual {c |} {res} 334155.274     9,367  35.6736708   {txt}R-squared       ={res}    0.0049
+{txt}{hline 13}{c +}{hline 34}   Adj R-squared   ={res}    0.0046
+{txt}       Total {c |} {res} 335784.019     9,369  35.8398996   {txt}Root MSE        =   {res} 5.9727
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}   phenotype{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      t{col 46}   P>|t|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+rs77799048_t {c |}{col 14}{res}{space 2}-1.534486{col 26}{space 2} .3109219{col 37}{space 1}   -4.94{col 46}{space 3}0.000{col 54}{space 4} -2.14396{col 67}{space 3}-.9250113
+{txt}rs11767391~t {c |}{col 14}{res}{space 2} .7956301{col 26}{space 2} .1747096{col 37}{space 1}    4.55{col 46}{space 3}0.000{col 54}{space 4} .4531613{col 67}{space 3} 1.138099
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} 171.3565{col 26}{space 2} .0672009{col 37}{space 1} 2549.91{col 46}{space 3}0.000{col 54}{space 4} 171.2248{col 67}{space 3} 171.4882
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\user\Documents\GitHub\GWAS\reg_using_imp_F_BODY_HEIGHT.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}18 Jul 2021, 20:00:31
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

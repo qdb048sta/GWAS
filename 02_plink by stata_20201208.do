@@ -1,7 +1,7 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
-log using "test_new_computer.log",replace
+log using "test_new_computer_20210719_change_sig_level_1e-5.log",replace
 
 clear all
 macro drop _all
@@ -15,7 +15,7 @@ global plink2path "C:\plink2\plink2.exe"
 
 // set data path
 global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
-global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
+//global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
 
 // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
 
@@ -57,7 +57,7 @@ if "$datatype"=="imputation"{
 }
 //---------------------------------------------------------------------------------
 // start from certain step, options include "" and elements in `steps'
-global start_from "QC1_maf" /*if "", detects whether files exist and start from latest step*/
+global start_from "pca" /*if "", detects whether files exist and start from latest step*/
 
 local steps = "QC1_maf QC2_miss QC3_bi QC4_sex QC5_chrom QC6_hwe QC7_het QC9_relate pca QC0_keep gwas clump prs recode"
 
@@ -87,11 +87,15 @@ global setclumpkb = 250   /*set clumping distance in kilobase*/
 global pcs 10
 
 // set phenotypes
-global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
+//global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
+global phenos "lbody_height"
+
 // global phenos "eduyrs"
 
 // set significant levels (p-values) for clumping
-global siglevel_list "0.00000005 0.000001"
+//global siglevel_list "0.00000005 0.000001"
+global siglevel_list "0.00001"
+
 // global siglevel_list "0.000001"
 
 // set sex
@@ -107,7 +111,6 @@ global vars ""
 
 //=====================================================================================
 
-
 	/*
 	QC steps
 	*/ 
@@ -122,21 +125,12 @@ global vars ""
 	global QC9 = "${filename}A_qc_09_relatedness_done"
 	global QC10 = "${filename}A_qc_10_pruned"
 	global QC0 = "${filename}A_qc_00_keep"
+
+
 	// remove SNPs with MAF under threshold
 // 	Minor allele frequencies/counts
 // 	--maf filters out all variants with minor allele frequency below the provided threshold (default 0.01)
 // 	https://www.cog-genomics.org/plink/1.9/filter#maf
-/*	global QC1_10 = "${filename}A_qc_01_10_maf"
-	global QC2_10 = "${filename}A_qc_02_10_missing"
-	global QC3_10 = "${filename}A_qc_03_10_biallelic"
-	global QC4_10 = "${filename}A_qc_04_10_sex"
-	global QC5_10= "${filename}A_qc_05_10_chrom"
-	global QC6_10= "${filename}A_qc_06_10_hwe"
-	global QC7_10= "${filename}A_qc_07_10_het"
-	global freq_10= "${filename}A_qc_10_10_freq"
-	global QC9_10= "${filename}A_qc_09_10_relatedness_done"
-	global QC10_10= "${filename}A_qc_10_10_pruned"
-	global QC0_10= "${filename}A_qc_00_10_keep" */
 	
 	cap confirm file "${QC1}.bed"
 	if (_rc & ${nstart_from}==.)| (${nstart_from}<= 1 & ${nstart_from}!=.) {
@@ -684,7 +678,6 @@ foreach s of global sex{
 		}
 	}
 	
-
 	
 	/*
 	run GWAS
@@ -818,7 +811,9 @@ foreach s of global sex{
 			if "`sl'"=="0.00000005"{
 				local sig = "5e-8"
 			}
-			
+			if "`sl'"=="0.00001"{
+				local sig = "1e-5"
+			}
 			
 			global name7 = "${filename}D_gwas`ss'_clumped_`p'_pc${pcs}_sl`sig'"
 			global name8 = "${name7}_index_SNPs"
@@ -830,7 +825,9 @@ foreach s of global sex{
 				timer clear 1
 				timer on 1	
 
-				shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID ///
+				//shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID /// (problems might come from here because of no --pheno)
+				//		--clump-p1 `sl' --clump-p2 `sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
+				shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID --pheno "${name2}.txt" --pheno-name `p' ///
 						--clump-p1 `sl' --clump-p2 `sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
 						
 				timer off 1
@@ -886,7 +883,9 @@ foreach s of global sex{
 					qui import delimited "$check", delimiter(whitespace, collapse) case(preserve) clear 
 					qui keep SNP
 					qui export delimited using "${name8}.txt", nolab delimiter(tab) replace
-					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 3 6 9 header  ///
+					//shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 3 6 9 header  ///
+					//		--extract "${name8}.txt" --out "${name9}" this one does not have pheno
+					shell "$plinkpath" --bfile "${QC0}" --pheno "${name2}.txt" --pheno-name `p' --score "${name4}.txt" 3 6 9 header  ///
 							--extract "${name8}.txt" --out "${name9}"
 // 					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 2 4 9 header  ///
 // 							--extract "${name8}.txt" --out "${name9}"							
@@ -936,9 +935,24 @@ foreach s of global sex{
 					qui keep SNP A1
 					qui export delimited using "${name4}_SNP+A_only.txt", nolab delimiter(tab) replace
 					
-					shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
+					//shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
+					//		--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
+					//		--output-missing-genotype N --out "${name10}"
+					//shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
+					//		--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
+					//		--output-missing-genotype N --out "${name10}"
+					shell "$plinkpath" --bfile "${QC0}" --pheno "${name2}.txt" --pheno-name `p' --extract "${name8}.txt" ///
 							--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
 							--output-missing-genotype N --out "${name10}"
+							
+					// merge to original data 
+					/*import delimited "$keepfile", case(preserve) encoding(UTF-8) clear
+					save "${keepfile}_dta.dta",replace
+					import delimited "${name10}.raw",delimiter(whitespace, collapse) case(preserve) clear
+					merge 1:1 IID FID using "${keepfile}_dta.dta"
+					save "${name10}_dta_file.dta",replace*/
+
+					//
 							
 					timer off 1
 					qui timer list 1
