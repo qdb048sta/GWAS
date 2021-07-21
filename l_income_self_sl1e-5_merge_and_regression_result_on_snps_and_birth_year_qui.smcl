@@ -1,0 +1,408 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\user\Documents\GitHub\GWAS\l_income_self_sl1e-5_merge_and_regression_result_on_snps_and_birth_year_qui.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}21 Jul 2021, 09:57:23
+{txt}
+{com}. local sexlist "m f a"
+{txt}
+{com}. foreach s of local sexlist{c -(}
+{txt}  2{com}.     qui import delimited "C:\TWB_2021\02_twb1+2_input_`s'_30K_20210720.txt",delimiter(whitespace, collapse) case(preserve) clear
+{txt}  3{com}.         qui save "C:\TWB_2021\02_twb1+2_input_`s'_30K_20210720_dta.dta",replace
+{txt}  4{com}.         qui import delimited "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_l_income_self_pc10_sl1e-5_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
+{txt}  5{com}.         qui merge 1:1 IID FID using "C:\TWB_2021\02_twb1+2_input_`s'_30K_20210720_dta.dta"
+{txt}  6{com}.         qui save "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_l_income_self_pc10_sl1e-5_recoded_dta.dta", replace
+{txt}  7{com}.         
+.         
+. {c )-}
+{txt}
+{com}. 
+. foreach s of local sexlist{c -(}
+{txt}  2{com}.         qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_l_income_self_pc10_sl1e-5_recoded_dta.dta",clear
+{txt}  3{com}.         qui levelsof birth_year,local(birth_year_list)
+{txt}  4{com}.         foreach b of local birth_year_list{c -(}
+{txt}  5{com}.                 qui gen birth_year_`b'=0
+{txt}  6{com}.                 qui replace birth_year_`b'=1 if `b'==birth_year
+{txt}  7{com}.         {c )-}
+{txt}  8{com}.         qui drop if lbody_height<0
+{txt}  9{com}.         qui ds
+{txt} 10{com}.         foreach r in `r(varlist)'{c -(}
+{txt} 11{com}.                 qui capture confirm string variable `r'
+{txt} 12{com}.                 if _rc==0{c -(}
+{txt} 13{com}.                         if strpos("`r'","rs")==1{c -(}
+{txt} 14{com}.                         qui drop if `r'=="NA"
+{txt} 15{com}.                         qui destring(`r'),replace
+{txt} 16{com}.                         
+.                         {c )-}
+{txt} 17{com}.                 {c )-}
+{txt} 18{com}.                 else{c -(}
+{txt} 19{com}.                         //
+.                 {c )-}
+{txt} 20{com}.                 
+.                                 
+.         
+.                 
+.         {c )-}
+{txt} 21{com}.         display "======================================================================================================="
+{txt} 22{com}.         display "=====================This is ivreg2 regression result of sex : `s' ===================================="
+{txt} 23{com}.         display "======================================================================================================="
+{txt} 24{com}.         
+.         ivreg2 l_income_self (lbody_height=rs*) birth_year_*
+{txt} 25{com}.         
+.         
+.         
+. 
+. {c )-}       
+=======================================================================================================
+=====================This is ivreg2 regression result of sex : m ====================================
+=======================================================================================================
+{txt}Warning - collinearities detected
+Vars dropped:{col 21}birth_year_1988
+{res}
+{txt}IV (2SLS) estimation
+{hline 20}
+
+Estimates efficient for homoskedasticity only
+Statistics consistent for homoskedasticity only
+
+{col 55}Number of obs = {res}   14405
+{txt}{col 55}F( 50, 14354) = {res}   15.11
+{txt}{col 55}Prob > F      = {res}  0.0000
+{txt}Total (centered) SS     = {res} 6772.590495{txt}{col 55}Centered R2   = {res} -0.9587
+{txt}Total (uncentered) SS   = {res} 1655120.552{txt}{col 55}Uncentered R2 = {res}  0.9920
+{txt}Residual SS             = {res}  13265.1462{txt}{col 55}Root MSE      = {res}   .9596
+
+{txt}{hline 16}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}  l_income_self{col 17}{c |}      Coef.{col 29}   Std. Err.{col 41}      z{col 49}   P>|z|{col 57}     [95% Con{col 70}f. Interval]
+{hline 16}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}lbody_height {c |}{col 17}{res}{space 2} 22.68449{col 29}{space 2} 8.203854{col 40}{space 1}    2.77{col 49}{space 3}0.006{col 57}{space 4} 6.605231{col 70}{space 3} 38.76375
+{txt}birth_year_1939 {c |}{col 17}{res}{space 2}  .834505{col 29}{space 2} 1.091888{col 40}{space 1}    0.76{col 49}{space 3}0.445{col 57}{space 4}-1.305557{col 70}{space 3} 2.974567
+{txt}birth_year_1940 {c |}{col 17}{res}{space 2} .5095735{col 29}{space 2} .5103679{col 40}{space 1}    1.00{col 49}{space 3}0.318{col 57}{space 4}-.4907292{col 70}{space 3} 1.509876
+{txt}birth_year_1941 {c |}{col 17}{res}{space 2} .3257571{col 29}{space 2} .5149357{col 40}{space 1}    0.63{col 49}{space 3}0.527{col 57}{space 4}-.6834984{col 70}{space 3} 1.335013
+{txt}birth_year_1942 {c |}{col 17}{res}{space 2} .4294996{col 29}{space 2} .4409935{col 40}{space 1}    0.97{col 49}{space 3}0.330{col 57}{space 4}-.4348319{col 70}{space 3} 1.293831
+{txt}birth_year_1943 {c |}{col 17}{res}{space 2} .5058428{col 29}{space 2} .4618427{col 40}{space 1}    1.10{col 49}{space 3}0.273{col 57}{space 4}-.3993522{col 70}{space 3} 1.411038
+{txt}birth_year_1944 {c |}{col 17}{res}{space 2} .3755633{col 29}{space 2} .4553521{col 40}{space 1}    0.82{col 49}{space 3}0.409{col 57}{space 4}-.5169105{col 70}{space 3} 1.268037
+{txt}birth_year_1945 {c |}{col 17}{res}{space 2} .3295561{col 29}{space 2} .4488837{col 40}{space 1}    0.73{col 49}{space 3}0.463{col 57}{space 4}-.5502397{col 70}{space 3} 1.209352
+{txt}birth_year_1946 {c |}{col 17}{res}{space 2} .5454478{col 29}{space 2} .4228436{col 40}{space 1}    1.29{col 49}{space 3}0.197{col 57}{space 4}-.2833104{col 70}{space 3} 1.374206
+{txt}birth_year_1947 {c |}{col 17}{res}{space 2} .4906551{col 29}{space 2} .4069796{col 40}{space 1}    1.21{col 49}{space 3}0.228{col 57}{space 4}-.3070103{col 70}{space 3}  1.28832
+{txt}birth_year_1948 {c |}{col 17}{res}{space 2} .6675633{col 29}{space 2} .3888064{col 40}{space 1}    1.72{col 49}{space 3}0.086{col 57}{space 4}-.0944833{col 70}{space 3}  1.42961
+{txt}birth_year_1949 {c |}{col 17}{res}{space 2} .5609496{col 29}{space 2} .3730416{col 40}{space 1}    1.50{col 49}{space 3}0.133{col 57}{space 4}-.1701986{col 70}{space 3} 1.292098
+{txt}birth_year_1950 {c |}{col 17}{res}{space 2} .6331484{col 29}{space 2} .3977396{col 40}{space 1}    1.59{col 49}{space 3}0.111{col 57}{space 4}-.1464068{col 70}{space 3} 1.412704
+{txt}birth_year_1951 {c |}{col 17}{res}{space 2} .6356744{col 29}{space 2} .3339664{col 40}{space 1}    1.90{col 49}{space 3}0.057{col 57}{space 4}-.0188877{col 70}{space 3} 1.290236
+{txt}birth_year_1952 {c |}{col 17}{res}{space 2} .6066796{col 29}{space 2} .3391717{col 40}{space 1}    1.79{col 49}{space 3}0.074{col 57}{space 4}-.0580848{col 70}{space 3} 1.271444
+{txt}birth_year_1953 {c |}{col 17}{res}{space 2} .7094196{col 29}{space 2} .3319094{col 40}{space 1}    2.14{col 49}{space 3}0.033{col 57}{space 4} .0588892{col 70}{space 3}  1.35995
+{txt}birth_year_1954 {c |}{col 17}{res}{space 2} .6978727{col 29}{space 2}  .313887{col 40}{space 1}    2.22{col 49}{space 3}0.026{col 57}{space 4} .0826654{col 70}{space 3}  1.31308
+{txt}birth_year_1955 {c |}{col 17}{res}{space 2}  .724565{col 29}{space 2} .3296426{col 40}{space 1}    2.20{col 49}{space 3}0.028{col 57}{space 4} .0784773{col 70}{space 3} 1.370653
+{txt}birth_year_1956 {c |}{col 17}{res}{space 2} .6696756{col 29}{space 2} .2942268{col 40}{space 1}    2.28{col 49}{space 3}0.023{col 57}{space 4} .0930016{col 70}{space 3}  1.24635
+{txt}birth_year_1957 {c |}{col 17}{res}{space 2} .8432749{col 29}{space 2} .3255398{col 40}{space 1}    2.59{col 49}{space 3}0.010{col 57}{space 4} .2052287{col 70}{space 3} 1.481321
+{txt}birth_year_1958 {c |}{col 17}{res}{space 2} .6207888{col 29}{space 2} .2718988{col 40}{space 1}    2.28{col 49}{space 3}0.022{col 57}{space 4}  .087877{col 70}{space 3} 1.153701
+{txt}birth_year_1959 {c |}{col 17}{res}{space 2} .7289106{col 29}{space 2} .2865586{col 40}{space 1}    2.54{col 49}{space 3}0.011{col 57}{space 4} .1672662{col 70}{space 3} 1.290555
+{txt}birth_year_1960 {c |}{col 17}{res}{space 2} .6201228{col 29}{space 2} .2651751{col 40}{space 1}    2.34{col 49}{space 3}0.019{col 57}{space 4} .1003891{col 70}{space 3} 1.139856
+{txt}birth_year_1961 {c |}{col 17}{res}{space 2} .6360669{col 29}{space 2} .2591787{col 40}{space 1}    2.45{col 49}{space 3}0.014{col 57}{space 4}  .128086{col 70}{space 3} 1.144048
+{txt}birth_year_1962 {c |}{col 17}{res}{space 2}  .660054{col 29}{space 2} .2535134{col 40}{space 1}    2.60{col 49}{space 3}0.009{col 57}{space 4} .1631769{col 70}{space 3} 1.156931
+{txt}birth_year_1963 {c |}{col 17}{res}{space 2} .6945459{col 29}{space 2} .2566855{col 40}{space 1}    2.71{col 49}{space 3}0.007{col 57}{space 4} .1914515{col 70}{space 3}  1.19764
+{txt}birth_year_1964 {c |}{col 17}{res}{space 2} .5245854{col 29}{space 2} .2170873{col 40}{space 1}    2.42{col 49}{space 3}0.016{col 57}{space 4} .0991021{col 70}{space 3} .9500688
+{txt}birth_year_1965 {c |}{col 17}{res}{space 2} .5361211{col 29}{space 2} .2002001{col 40}{space 1}    2.68{col 49}{space 3}0.007{col 57}{space 4} .1437361{col 70}{space 3}  .928506
+{txt}birth_year_1966 {c |}{col 17}{res}{space 2} .6153129{col 29}{space 2} .2181078{col 40}{space 1}    2.82{col 49}{space 3}0.005{col 57}{space 4} .1878294{col 70}{space 3} 1.042796
+{txt}birth_year_1967 {c |}{col 17}{res}{space 2} .5426428{col 29}{space 2} .2016088{col 40}{space 1}    2.69{col 49}{space 3}0.007{col 57}{space 4} .1474968{col 70}{space 3} .9377887
+{txt}birth_year_1968 {c |}{col 17}{res}{space 2} .5405204{col 29}{space 2} .2017561{col 40}{space 1}    2.68{col 49}{space 3}0.007{col 57}{space 4} .1450858{col 70}{space 3} .9359551
+{txt}birth_year_1969 {c |}{col 17}{res}{space 2} .4627805{col 29}{space 2}  .186573{col 40}{space 1}    2.48{col 49}{space 3}0.013{col 57}{space 4} .0971042{col 70}{space 3} .8284568
+{txt}birth_year_1970 {c |}{col 17}{res}{space 2} .3995828{col 29}{space 2} .1863883{col 40}{space 1}    2.14{col 49}{space 3}0.032{col 57}{space 4} .0342685{col 70}{space 3} .7648972
+{txt}birth_year_1971 {c |}{col 17}{res}{space 2} .4523865{col 29}{space 2} .1906904{col 40}{space 1}    2.37{col 49}{space 3}0.018{col 57}{space 4} .0786402{col 70}{space 3} .8261329
+{txt}birth_year_1972 {c |}{col 17}{res}{space 2}  .429908{col 29}{space 2} .1876854{col 40}{space 1}    2.29{col 49}{space 3}0.022{col 57}{space 4} .0620514{col 70}{space 3} .7977647
+{txt}birth_year_1973 {c |}{col 17}{res}{space 2} .3739528{col 29}{space 2} .1802281{col 40}{space 1}    2.07{col 49}{space 3}0.038{col 57}{space 4} .0207123{col 70}{space 3} .7271933
+{txt}birth_year_1974 {c |}{col 17}{res}{space 2} .2850764{col 29}{space 2} .1716053{col 40}{space 1}    1.66{col 49}{space 3}0.097{col 57}{space 4}-.0512637{col 70}{space 3} .6214166
+{txt}birth_year_1975 {c |}{col 17}{res}{space 2} .2786914{col 29}{space 2} .1730818{col 40}{space 1}    1.61{col 49}{space 3}0.107{col 57}{space 4}-.0605428{col 70}{space 3} .6179255
+{txt}birth_year_1976 {c |}{col 17}{res}{space 2} .2821533{col 29}{space 2} .1718051{col 40}{space 1}    1.64{col 49}{space 3}0.101{col 57}{space 4}-.0545785{col 70}{space 3} .6188851
+{txt}birth_year_1977 {c |}{col 17}{res}{space 2}  .189451{col 29}{space 2} .1703131{col 40}{space 1}    1.11{col 49}{space 3}0.266{col 57}{space 4}-.1443565{col 70}{space 3} .5232585
+{txt}birth_year_1978 {c |}{col 17}{res}{space 2} .2026519{col 29}{space 2} .1707507{col 40}{space 1}    1.19{col 49}{space 3}0.235{col 57}{space 4}-.1320134{col 70}{space 3} .5373171
+{txt}birth_year_1979 {c |}{col 17}{res}{space 2} .1538325{col 29}{space 2}   .17157{col 40}{space 1}    0.90{col 49}{space 3}0.370{col 57}{space 4}-.1824386{col 70}{space 3} .4901035
+{txt}birth_year_1980 {c |}{col 17}{res}{space 2} .2048069{col 29}{space 2}   .17138{col 40}{space 1}    1.20{col 49}{space 3}0.232{col 57}{space 4}-.1310917{col 70}{space 3} .5407055
+{txt}birth_year_1981 {c |}{col 17}{res}{space 2} .0470982{col 29}{space 2} .1702744{col 40}{space 1}    0.28{col 49}{space 3}0.782{col 57}{space 4}-.2866336{col 70}{space 3}   .38083
+{txt}birth_year_1982 {c |}{col 17}{res}{space 2} .0902278{col 29}{space 2} .1706003{col 40}{space 1}    0.53{col 49}{space 3}0.597{col 57}{space 4}-.2441426{col 70}{space 3} .4245983
+{txt}birth_year_1983 {c |}{col 17}{res}{space 2} .0669621{col 29}{space 2} .1735699{col 40}{space 1}    0.39{col 49}{space 3}0.700{col 57}{space 4}-.2732286{col 70}{space 3} .4071528
+{txt}birth_year_1984 {c |}{col 17}{res}{space 2} .0034285{col 29}{space 2} .1731295{col 40}{space 1}    0.02{col 49}{space 3}0.984{col 57}{space 4}-.3358991{col 70}{space 3}  .342756
+{txt}birth_year_1985 {c |}{col 17}{res}{space 2}-.0943316{col 29}{space 2} .1810737{col 40}{space 1}   -0.52{col 49}{space 3}0.602{col 57}{space 4}-.4492295{col 70}{space 3} .2605663
+{txt}birth_year_1986 {c |}{col 17}{res}{space 2} -.238371{col 29}{space 2}  .190259{col 40}{space 1}   -1.25{col 49}{space 3}0.210{col 57}{space 4}-.6112718{col 70}{space 3} .1345298
+{txt}birth_year_1987 {c |}{col 17}{res}{space 2} -.162123{col 29}{space 2} .1926392{col 40}{space 1}   -0.84{col 49}{space 3}0.400{col 57}{space 4}-.5396889{col 70}{space 3} .2154429
+{txt}birth_year_1988 {c |}{col 17}{res}{space 2}        0{col 29}{txt}  (omitted)
+{space 10}_cons {c |}{col 17}{res}{space 2}-106.1873{col 29}{space 2} 42.25851{col 40}{space 1}   -2.51{col 49}{space 3}0.012{col 57}{space 4}-189.0125{col 70}{space 3}-23.36216
+{txt}{hline 16}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{help ivreg2##idtest:Underidentification test} (Anderson canon. corr. LM statistic):{res}{col 71}  11.779
+{txt}{col 52}Chi-sq({res}6{txt}) P-val =  {res}{col 73}0.0671
+{txt}{hline 78}
+{help ivreg2##widtest:Weak identification test} (Cragg-Donald Wald F statistic):{res}{col 71}   1.957
+{txt}Stock-Yogo weak ID test critical values:{res}{txt}{col 42} 5% maximal IV relative bias{res}{col 73} 19.28
+{txt}{col 42}10% maximal IV relative bias{res}{col 73} 11.12
+{txt}{col 42}20% maximal IV relative bias{res}{col 73}  6.76
+{txt}{col 42}30% maximal IV relative bias{res}{col 73}  5.15
+{txt}{col 42}10% maximal IV size{res}{col 73} 29.18
+{txt}{col 42}15% maximal IV size{res}{col 73} 16.23
+{txt}{col 42}20% maximal IV size{res}{col 73} 11.72
+{txt}{col 42}25% maximal IV size{res}{col 73}  9.38
+{txt}Source: Stock-Yogo (2005).  Reproduced by permission.
+{hline 78}
+{help ivreg2##overidtests:Sargan statistic} (overidentification test of all instruments):{res}{col 71}  27.651
+{txt}{col 52}Chi-sq({res}5{txt}) P-val =  {res}{col 73}0.0000
+{txt}{hline 78}
+Instrumented:{col 23}lbody_height
+Included instruments:{col 23}birth_year_1939 birth_year_1940 birth_year_1941
+{col 23}birth_year_1942 birth_year_1943 birth_year_1944
+{col 23}birth_year_1945 birth_year_1946 birth_year_1947
+{col 23}birth_year_1948 birth_year_1949 birth_year_1950
+{col 23}birth_year_1951 birth_year_1952 birth_year_1953
+{col 23}birth_year_1954 birth_year_1955 birth_year_1956
+{col 23}birth_year_1957 birth_year_1958 birth_year_1959
+{col 23}birth_year_1960 birth_year_1961 birth_year_1962
+{col 23}birth_year_1963 birth_year_1964 birth_year_1965
+{col 23}birth_year_1966 birth_year_1967 birth_year_1968
+{col 23}birth_year_1969 birth_year_1970 birth_year_1971
+{col 23}birth_year_1972 birth_year_1973 birth_year_1974
+{col 23}birth_year_1975 birth_year_1976 birth_year_1977
+{col 23}birth_year_1978 birth_year_1979 birth_year_1980
+{col 23}birth_year_1981 birth_year_1982 birth_year_1983
+{col 23}birth_year_1984 birth_year_1985 birth_year_1986
+{col 23}birth_year_1987
+Excluded instruments:{col 23}rs190358934_A rs188048609_C rs7039192_C rs139816719_C
+{col 23}rs1770387_A rs11081897_G
+Dropped collinear:{col 23}birth_year_1988
+{hline 78}
+=======================================================================================================
+=====================This is ivreg2 regression result of sex : f ====================================
+=======================================================================================================
+Warning - collinearities detected
+Vars dropped:{col 21}birth_year_1988
+{res}
+{txt}IV (2SLS) estimation
+{hline 20}
+
+Estimates efficient for homoskedasticity only
+Statistics consistent for homoskedasticity only
+
+{col 55}Number of obs = {res}   22011
+{txt}{col 55}F( 50, 21960) = {res}    6.15
+{txt}{col 55}Prob > F      = {res}  0.0000
+{txt}Total (centered) SS     = {res} 11676.67175{txt}{col 55}Centered R2   = {res} -3.1796
+{txt}Total (uncentered) SS   = {res} 2349940.363{txt}{col 55}Uncentered R2 = {res}  0.9792
+{txt}Residual SS             = {res} 48804.39066{txt}{col 55}Root MSE      = {res}   1.489
+
+{txt}{hline 16}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}  l_income_self{col 17}{c |}      Coef.{col 29}   Std. Err.{col 41}      z{col 49}   P>|z|{col 57}     [95% Con{col 70}f. Interval]
+{hline 16}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}lbody_height {c |}{col 17}{res}{space 2} 40.50982{col 29}{space 2} 12.99792{col 40}{space 1}    3.12{col 49}{space 3}0.002{col 57}{space 4} 15.03437{col 70}{space 3} 65.98528
+{txt}birth_year_1939 {c |}{col 17}{res}{space 2} 1.110098{col 29}{space 2} 1.611178{col 40}{space 1}    0.69{col 49}{space 3}0.491{col 57}{space 4}-2.047752{col 70}{space 3} 4.267949
+{txt}birth_year_1940 {c |}{col 17}{res}{space 2} .4778829{col 29}{space 2}  .687503{col 40}{space 1}    0.70{col 49}{space 3}0.487{col 57}{space 4}-.8695982{col 70}{space 3} 1.825364
+{txt}birth_year_1941 {c |}{col 17}{res}{space 2} 1.181515{col 29}{space 2} .7529311{col 40}{space 1}    1.57{col 49}{space 3}0.117{col 57}{space 4}-.2942029{col 70}{space 3} 2.657233
+{txt}birth_year_1942 {c |}{col 17}{res}{space 2} .6001733{col 29}{space 2} .5645687{col 40}{space 1}    1.06{col 49}{space 3}0.288{col 57}{space 4} -.506361{col 70}{space 3} 1.706708
+{txt}birth_year_1943 {c |}{col 17}{res}{space 2} .8348937{col 29}{space 2} .6272531{col 40}{space 1}    1.33{col 49}{space 3}0.183{col 57}{space 4}-.3944998{col 70}{space 3} 2.064287
+{txt}birth_year_1944 {c |}{col 17}{res}{space 2} .9427949{col 29}{space 2}  .586993{col 40}{space 1}    1.61{col 49}{space 3}0.108{col 57}{space 4}-.2076903{col 70}{space 3}  2.09328
+{txt}birth_year_1945 {c |}{col 17}{res}{space 2} .7784656{col 29}{space 2} .5305124{col 40}{space 1}    1.47{col 49}{space 3}0.142{col 57}{space 4}-.2613195{col 70}{space 3} 1.818251
+{txt}birth_year_1946 {c |}{col 17}{res}{space 2} 1.106252{col 29}{space 2} .5785153{col 40}{space 1}    1.91{col 49}{space 3}0.056{col 57}{space 4}-.0276173{col 70}{space 3} 2.240121
+{txt}birth_year_1947 {c |}{col 17}{res}{space 2} 1.047058{col 29}{space 2}  .515436{col 40}{space 1}    2.03{col 49}{space 3}0.042{col 57}{space 4} .0368217{col 70}{space 3} 2.057294
+{txt}birth_year_1948 {c |}{col 17}{res}{space 2} 1.090774{col 29}{space 2} .5181944{col 40}{space 1}    2.10{col 49}{space 3}0.035{col 57}{space 4} .0751314{col 70}{space 3} 2.106416
+{txt}birth_year_1949 {c |}{col 17}{res}{space 2}  .992312{col 29}{space 2} .4748186{col 40}{space 1}    2.09{col 49}{space 3}0.037{col 57}{space 4} .0616847{col 70}{space 3} 1.922939
+{txt}birth_year_1950 {c |}{col 17}{res}{space 2} .9652545{col 29}{space 2} .4805276{col 40}{space 1}    2.01{col 49}{space 3}0.045{col 57}{space 4} .0234377{col 70}{space 3} 1.907071
+{txt}birth_year_1951 {c |}{col 17}{res}{space 2}   1.0962{col 29}{space 2}  .459074{col 40}{space 1}    2.39{col 49}{space 3}0.017{col 57}{space 4} .1964314{col 70}{space 3} 1.995968
+{txt}birth_year_1952 {c |}{col 17}{res}{space 2} 1.036197{col 29}{space 2} .4445045{col 40}{space 1}    2.33{col 49}{space 3}0.020{col 57}{space 4} .1649839{col 70}{space 3}  1.90741
+{txt}birth_year_1953 {c |}{col 17}{res}{space 2} .9723139{col 29}{space 2} .4287822{col 40}{space 1}    2.27{col 49}{space 3}0.023{col 57}{space 4} .1319162{col 70}{space 3} 1.812712
+{txt}birth_year_1954 {c |}{col 17}{res}{space 2} .9466477{col 29}{space 2} .4035795{col 40}{space 1}    2.35{col 49}{space 3}0.019{col 57}{space 4} .1556464{col 70}{space 3} 1.737649
+{txt}birth_year_1955 {c |}{col 17}{res}{space 2} .8655764{col 29}{space 2} .3871168{col 40}{space 1}    2.24{col 49}{space 3}0.025{col 57}{space 4} .1068414{col 70}{space 3} 1.624311
+{txt}birth_year_1956 {c |}{col 17}{res}{space 2} .9383805{col 29}{space 2} .3948135{col 40}{space 1}    2.38{col 49}{space 3}0.017{col 57}{space 4} .1645603{col 70}{space 3} 1.712201
+{txt}birth_year_1957 {c |}{col 17}{res}{space 2} .8093476{col 29}{space 2}  .356596{col 40}{space 1}    2.27{col 49}{space 3}0.023{col 57}{space 4} .1104323{col 70}{space 3} 1.508263
+{txt}birth_year_1958 {c |}{col 17}{res}{space 2} .8312989{col 29}{space 2} .3579973{col 40}{space 1}    2.32{col 49}{space 3}0.020{col 57}{space 4} .1296371{col 70}{space 3} 1.532961
+{txt}birth_year_1959 {c |}{col 17}{res}{space 2}  .900048{col 29}{space 2} .3585458{col 40}{space 1}    2.51{col 49}{space 3}0.012{col 57}{space 4} .1973111{col 70}{space 3} 1.602785
+{txt}birth_year_1960 {c |}{col 17}{res}{space 2} .7702195{col 29}{space 2} .3215904{col 40}{space 1}    2.40{col 49}{space 3}0.017{col 57}{space 4}  .139914{col 70}{space 3} 1.400525
+{txt}birth_year_1961 {c |}{col 17}{res}{space 2} .7517921{col 29}{space 2} .3173359{col 40}{space 1}    2.37{col 49}{space 3}0.018{col 57}{space 4} .1298251{col 70}{space 3} 1.373759
+{txt}birth_year_1962 {c |}{col 17}{res}{space 2} .7126749{col 29}{space 2} .2968688{col 40}{space 1}    2.40{col 49}{space 3}0.016{col 57}{space 4} .1308227{col 70}{space 3} 1.294527
+{txt}birth_year_1963 {c |}{col 17}{res}{space 2} .6858902{col 29}{space 2} .2927011{col 40}{space 1}    2.34{col 49}{space 3}0.019{col 57}{space 4} .1122065{col 70}{space 3} 1.259574
+{txt}birth_year_1964 {c |}{col 17}{res}{space 2} .5000964{col 29}{space 2} .2530022{col 40}{space 1}    1.98{col 49}{space 3}0.048{col 57}{space 4} .0042211{col 70}{space 3} .9959716
+{txt}birth_year_1965 {c |}{col 17}{res}{space 2}  .642971{col 29}{space 2} .2769502{col 40}{space 1}    2.32{col 49}{space 3}0.020{col 57}{space 4} .1001585{col 70}{space 3} 1.185783
+{txt}birth_year_1966 {c |}{col 17}{res}{space 2} .5693199{col 29}{space 2} .2621245{col 40}{space 1}    2.17{col 49}{space 3}0.030{col 57}{space 4} .0555654{col 70}{space 3} 1.083074
+{txt}birth_year_1967 {c |}{col 17}{res}{space 2} .4647231{col 29}{space 2} .2466809{col 40}{space 1}    1.88{col 49}{space 3}0.060{col 57}{space 4}-.0187627{col 70}{space 3} .9482088
+{txt}birth_year_1968 {c |}{col 17}{res}{space 2} .4720864{col 29}{space 2} .2442907{col 40}{space 1}    1.93{col 49}{space 3}0.053{col 57}{space 4}-.0067145{col 70}{space 3} .9508873
+{txt}birth_year_1969 {c |}{col 17}{res}{space 2} .4344074{col 29}{space 2} .2329869{col 40}{space 1}    1.86{col 49}{space 3}0.062{col 57}{space 4}-.0222386{col 70}{space 3} .8910534
+{txt}birth_year_1970 {c |}{col 17}{res}{space 2} .3323877{col 29}{space 2} .2239531{col 40}{space 1}    1.48{col 49}{space 3}0.138{col 57}{space 4}-.1065524{col 70}{space 3} .7713277
+{txt}birth_year_1971 {c |}{col 17}{res}{space 2} .2877322{col 29}{space 2} .2220727{col 40}{space 1}    1.30{col 49}{space 3}0.195{col 57}{space 4}-.1475222{col 70}{space 3} .7229866
+{txt}birth_year_1972 {c |}{col 17}{res}{space 2} .3389361{col 29}{space 2} .2224036{col 40}{space 1}    1.52{col 49}{space 3}0.128{col 57}{space 4}-.0969669{col 70}{space 3} .7748391
+{txt}birth_year_1973 {c |}{col 17}{res}{space 2} .3162621{col 29}{space 2} .2215323{col 40}{space 1}    1.43{col 49}{space 3}0.153{col 57}{space 4}-.1179332{col 70}{space 3} .7504575
+{txt}birth_year_1974 {c |}{col 17}{res}{space 2} .0771309{col 29}{space 2} .2173512{col 40}{space 1}    0.35{col 49}{space 3}0.723{col 57}{space 4}-.3488696{col 70}{space 3} .5031314
+{txt}birth_year_1975 {c |}{col 17}{res}{space 2} .1436691{col 29}{space 2} .2170759{col 40}{space 1}    0.66{col 49}{space 3}0.508{col 57}{space 4}-.2817919{col 70}{space 3} .5691302
+{txt}birth_year_1976 {c |}{col 17}{res}{space 2} .1389351{col 29}{space 2} .2152071{col 40}{space 1}    0.65{col 49}{space 3}0.519{col 57}{space 4}-.2828632{col 70}{space 3} .5607333
+{txt}birth_year_1977 {c |}{col 17}{res}{space 2}  .134431{col 29}{space 2} .2166771{col 40}{space 1}    0.62{col 49}{space 3}0.535{col 57}{space 4}-.2902484{col 70}{space 3} .5591104
+{txt}birth_year_1978 {c |}{col 17}{res}{space 2}-.0140808{col 29}{space 2} .2192013{col 40}{space 1}   -0.06{col 49}{space 3}0.949{col 57}{space 4}-.4437075{col 70}{space 3}  .415546
+{txt}birth_year_1979 {c |}{col 17}{res}{space 2}-.0868504{col 29}{space 2}  .222794{col 40}{space 1}   -0.39{col 49}{space 3}0.697{col 57}{space 4}-.5235186{col 70}{space 3} .3498177
+{txt}birth_year_1980 {c |}{col 17}{res}{space 2}-.0409855{col 29}{space 2} .2202422{col 40}{space 1}   -0.19{col 49}{space 3}0.852{col 57}{space 4}-.4726524{col 70}{space 3} .3906814
+{txt}birth_year_1981 {c |}{col 17}{res}{space 2}-.1752404{col 29}{space 2} .2312849{col 40}{space 1}   -0.76{col 49}{space 3}0.449{col 57}{space 4}-.6285505{col 70}{space 3} .2780697
+{txt}birth_year_1982 {c |}{col 17}{res}{space 2}-.2486775{col 29}{space 2} .2406518{col 40}{space 1}   -1.03{col 49}{space 3}0.301{col 57}{space 4}-.7203463{col 70}{space 3} .2229914
+{txt}birth_year_1983 {c |}{col 17}{res}{space 2} .0023164{col 29}{space 2} .2220663{col 40}{space 1}    0.01{col 49}{space 3}0.992{col 57}{space 4}-.4329256{col 70}{space 3} .4375584
+{txt}birth_year_1984 {c |}{col 17}{res}{space 2}-.1550413{col 29}{space 2} .2316703{col 40}{space 1}   -0.67{col 49}{space 3}0.503{col 57}{space 4}-.6091066{col 70}{space 3} .2990241
+{txt}birth_year_1985 {c |}{col 17}{res}{space 2}-.2437061{col 29}{space 2} .2452106{col 40}{space 1}   -0.99{col 49}{space 3}0.320{col 57}{space 4}  -.72431{col 70}{space 3} .2368977
+{txt}birth_year_1986 {c |}{col 17}{res}{space 2}-.2079602{col 29}{space 2}  .244641{col 40}{space 1}   -0.85{col 49}{space 3}0.395{col 57}{space 4}-.6874478{col 70}{space 3} .2715274
+{txt}birth_year_1987 {c |}{col 17}{res}{space 2}  .212261{col 29}{space 2} .2502159{col 40}{space 1}    0.85{col 49}{space 3}0.396{col 57}{space 4}-.2781531{col 70}{space 3} .7026752
+{txt}birth_year_1988 {c |}{col 17}{res}{space 2}        0{col 29}{txt}  (omitted)
+{space 10}_cons {c |}{col 17}{res}{space 2}-195.1438{col 29}{space 2} 65.92265{col 40}{space 1}   -2.96{col 49}{space 3}0.003{col 57}{space 4}-324.3499{col 70}{space 3}-65.93782
+{txt}{hline 16}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{help ivreg2##idtest:Underidentification test} (Anderson canon. corr. LM statistic):{res}{col 71}  11.448
+{txt}{col 52}Chi-sq({res}11{txt}) P-val =  {res}{col 73}0.4065
+{txt}{hline 78}
+{help ivreg2##widtest:Weak identification test} (Cragg-Donald Wald F statistic):{res}{col 71}   1.038
+{txt}Stock-Yogo weak ID test critical values:{res}{txt}{col 42} 5% maximal IV relative bias{res}{col 73} 20.90
+{txt}{col 42}10% maximal IV relative bias{res}{col 73} 11.51
+{txt}{col 42}20% maximal IV relative bias{res}{col 73}  6.56
+{txt}{col 42}30% maximal IV relative bias{res}{col 73}  4.80
+{txt}{col 42}10% maximal IV size{res}{col 73} 40.90
+{txt}{col 42}15% maximal IV size{res}{col 73} 22.06
+{txt}{col 42}20% maximal IV size{res}{col 73} 15.56
+{txt}{col 42}25% maximal IV size{res}{col 73} 12.23
+{txt}Source: Stock-Yogo (2005).  Reproduced by permission.
+{hline 78}
+{help ivreg2##overidtests:Sargan statistic} (overidentification test of all instruments):{res}{col 71}  15.882
+{txt}{col 52}Chi-sq({res}10{txt}) P-val =  {res}{col 73}0.1031
+{txt}{hline 78}
+Instrumented:{col 23}lbody_height
+Included instruments:{col 23}birth_year_1939 birth_year_1940 birth_year_1941
+{col 23}birth_year_1942 birth_year_1943 birth_year_1944
+{col 23}birth_year_1945 birth_year_1946 birth_year_1947
+{col 23}birth_year_1948 birth_year_1949 birth_year_1950
+{col 23}birth_year_1951 birth_year_1952 birth_year_1953
+{col 23}birth_year_1954 birth_year_1955 birth_year_1956
+{col 23}birth_year_1957 birth_year_1958 birth_year_1959
+{col 23}birth_year_1960 birth_year_1961 birth_year_1962
+{col 23}birth_year_1963 birth_year_1964 birth_year_1965
+{col 23}birth_year_1966 birth_year_1967 birth_year_1968
+{col 23}birth_year_1969 birth_year_1970 birth_year_1971
+{col 23}birth_year_1972 birth_year_1973 birth_year_1974
+{col 23}birth_year_1975 birth_year_1976 birth_year_1977
+{col 23}birth_year_1978 birth_year_1979 birth_year_1980
+{col 23}birth_year_1981 birth_year_1982 birth_year_1983
+{col 23}birth_year_1984 birth_year_1985 birth_year_1986
+{col 23}birth_year_1987
+Excluded instruments:{col 23}rs7584680_C rs77194051_G rs552455_A rs79423270_T
+{col 23}rs1323324_A rs7875521_C rs118046743_T rs7337566_G
+{col 23}rs142637012_A rs8042515_C rs113410315_A
+Dropped collinear:{col 23}birth_year_1988
+{hline 78}
+=======================================================================================================
+=====================This is ivreg2 regression result of sex : a ====================================
+=======================================================================================================
+Warning - collinearities detected
+Vars dropped:{col 21}birth_year_1988
+{res}
+{txt}IV (2SLS) estimation
+{hline 20}
+
+Estimates efficient for homoskedasticity only
+Statistics consistent for homoskedasticity only
+
+{col 55}Number of obs = {res}   36311
+{txt}{col 55}F( 50, 36260) = {res}   14.92
+{txt}{col 55}Prob > F      = {res}  0.0000
+{txt}Total (centered) SS     = {res} 19626.42522{txt}{col 55}Centered R2   = {res} -2.0190
+{txt}Total (uncentered) SS   = {res} 3991979.446{txt}{col 55}Uncentered R2 = {res}  0.9852
+{txt}Residual SS             = {res} 59252.29157{txt}{col 55}Root MSE      = {res}   1.277
+
+{txt}{hline 16}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}  l_income_self{col 17}{c |}      Coef.{col 29}   Std. Err.{col 41}      z{col 49}   P>|z|{col 57}     [95% Con{col 70}f. Interval]
+{hline 16}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}lbody_height {c |}{col 17}{res}{space 2} 25.50588{col 29}{space 2}  9.28026{col 40}{space 1}    2.75{col 49}{space 3}0.006{col 57}{space 4} 7.316902{col 70}{space 3} 43.69485
+{txt}birth_year_1939 {c |}{col 17}{res}{space 2} .5253116{col 29}{space 2} .9988163{col 40}{space 1}    0.53{col 49}{space 3}0.599{col 57}{space 4}-1.432332{col 70}{space 3} 2.482956
+{txt}birth_year_1940 {c |}{col 17}{res}{space 2} -.125812{col 29}{space 2} .4009421{col 40}{space 1}   -0.31{col 49}{space 3}0.754{col 57}{space 4}-.9116439{col 70}{space 3}   .66002
+{txt}birth_year_1941 {c |}{col 17}{res}{space 2} .4184981{col 29}{space 2}  .522396{col 40}{space 1}    0.80{col 49}{space 3}0.423{col 57}{space 4}-.6053793{col 70}{space 3} 1.442375
+{txt}birth_year_1942 {c |}{col 17}{res}{space 2} .2079222{col 29}{space 2} .3673388{col 40}{space 1}    0.57{col 49}{space 3}0.571{col 57}{space 4}-.5120487{col 70}{space 3} .9278931
+{txt}birth_year_1943 {c |}{col 17}{res}{space 2} .2126572{col 29}{space 2} .4165829{col 40}{space 1}    0.51{col 49}{space 3}0.610{col 57}{space 4}-.6038302{col 70}{space 3} 1.029145
+{txt}birth_year_1944 {c |}{col 17}{res}{space 2} .2799028{col 29}{space 2} .3927102{col 40}{space 1}    0.71{col 49}{space 3}0.476{col 57}{space 4}-.4897951{col 70}{space 3} 1.049601
+{txt}birth_year_1945 {c |}{col 17}{res}{space 2} .2079723{col 29}{space 2} .3836716{col 40}{space 1}    0.54{col 49}{space 3}0.588{col 57}{space 4}-.5440103{col 70}{space 3} .9599549
+{txt}birth_year_1946 {c |}{col 17}{res}{space 2} .3178905{col 29}{space 2} .3288937{col 40}{space 1}    0.97{col 49}{space 3}0.334{col 57}{space 4}-.3267294{col 70}{space 3} .9625103
+{txt}birth_year_1947 {c |}{col 17}{res}{space 2} .4137826{col 29}{space 2} .3415197{col 40}{space 1}    1.21{col 49}{space 3}0.226{col 57}{space 4}-.2555836{col 70}{space 3} 1.083149
+{txt}birth_year_1948 {c |}{col 17}{res}{space 2} .5459897{col 29}{space 2} .3500315{col 40}{space 1}    1.56{col 49}{space 3}0.119{col 57}{space 4}-.1400595{col 70}{space 3} 1.232039
+{txt}birth_year_1949 {c |}{col 17}{res}{space 2} .4529881{col 29}{space 2} .3143054{col 40}{space 1}    1.44{col 49}{space 3}0.150{col 57}{space 4}-.1630391{col 70}{space 3} 1.069015
+{txt}birth_year_1950 {c |}{col 17}{res}{space 2} .4813965{col 29}{space 2} .3366026{col 40}{space 1}    1.43{col 49}{space 3}0.153{col 57}{space 4}-.1783324{col 70}{space 3} 1.141125
+{txt}birth_year_1951 {c |}{col 17}{res}{space 2} .6062831{col 29}{space 2}  .315606{col 40}{space 1}    1.92{col 49}{space 3}0.055{col 57}{space 4}-.0122932{col 70}{space 3} 1.224859
+{txt}birth_year_1952 {c |}{col 17}{res}{space 2} .6117276{col 29}{space 2} .3247035{col 40}{space 1}    1.88{col 49}{space 3}0.060{col 57}{space 4}-.0246796{col 70}{space 3} 1.248135
+{txt}birth_year_1953 {c |}{col 17}{res}{space 2} .6468606{col 29}{space 2}  .328582{col 40}{space 1}    1.97{col 49}{space 3}0.049{col 57}{space 4} .0028516{col 70}{space 3} 1.290869
+{txt}birth_year_1954 {c |}{col 17}{res}{space 2} .6935063{col 29}{space 2} .3161935{col 40}{space 1}    2.19{col 49}{space 3}0.028{col 57}{space 4} .0737785{col 70}{space 3} 1.313234
+{txt}birth_year_1955 {c |}{col 17}{res}{space 2} .5931398{col 29}{space 2} .2930003{col 40}{space 1}    2.02{col 49}{space 3}0.043{col 57}{space 4} .0188698{col 70}{space 3}  1.16741
+{txt}birth_year_1956 {c |}{col 17}{res}{space 2} .6697143{col 29}{space 2} .3059887{col 40}{space 1}    2.19{col 49}{space 3}0.029{col 57}{space 4} .0699876{col 70}{space 3} 1.269441
+{txt}birth_year_1957 {c |}{col 17}{res}{space 2}  .663967{col 29}{space 2} .2893109{col 40}{space 1}    2.29{col 49}{space 3}0.022{col 57}{space 4}  .096928{col 70}{space 3} 1.231006
+{txt}birth_year_1958 {c |}{col 17}{res}{space 2} .6109139{col 29}{space 2} .2793025{col 40}{space 1}    2.19{col 49}{space 3}0.029{col 57}{space 4} .0634911{col 70}{space 3} 1.158337
+{txt}birth_year_1959 {c |}{col 17}{res}{space 2} .7005968{col 29}{space 2} .2897225{col 40}{space 1}    2.42{col 49}{space 3}0.016{col 57}{space 4}  .132751{col 70}{space 3} 1.268442
+{txt}birth_year_1960 {c |}{col 17}{res}{space 2} .6462757{col 29}{space 2}  .270174{col 40}{space 1}    2.39{col 49}{space 3}0.017{col 57}{space 4} .1167444{col 70}{space 3} 1.175807
+{txt}birth_year_1961 {c |}{col 17}{res}{space 2} .6431292{col 29}{space 2} .2706267{col 40}{space 1}    2.38{col 49}{space 3}0.017{col 57}{space 4} .1127106{col 70}{space 3} 1.173548
+{txt}birth_year_1962 {c |}{col 17}{res}{space 2} .6718886{col 29}{space 2} .2616894{col 40}{space 1}    2.57{col 49}{space 3}0.010{col 57}{space 4} .1589868{col 70}{space 3}  1.18479
+{txt}birth_year_1963 {c |}{col 17}{res}{space 2} .6239858{col 29}{space 2} .2466249{col 40}{space 1}    2.53{col 49}{space 3}0.011{col 57}{space 4} .1406098{col 70}{space 3} 1.107362
+{txt}birth_year_1964 {c |}{col 17}{res}{space 2} .4630417{col 29}{space 2} .1953626{col 40}{space 1}    2.37{col 49}{space 3}0.018{col 57}{space 4}  .080138{col 70}{space 3} .8459454
+{txt}birth_year_1965 {c |}{col 17}{res}{space 2}  .570076{col 29}{space 2} .2149403{col 40}{space 1}    2.65{col 49}{space 3}0.008{col 57}{space 4} .1488007{col 70}{space 3} .9913513
+{txt}birth_year_1966 {c |}{col 17}{res}{space 2}  .549258{col 29}{space 2}  .204352{col 40}{space 1}    2.69{col 49}{space 3}0.007{col 57}{space 4} .1487354{col 70}{space 3} .9497806
+{txt}birth_year_1967 {c |}{col 17}{res}{space 2} .4701948{col 29}{space 2} .1880862{col 40}{space 1}    2.50{col 49}{space 3}0.012{col 57}{space 4} .1015527{col 70}{space 3} .8388369
+{txt}birth_year_1968 {c |}{col 17}{res}{space 2} .4068967{col 29}{space 2}  .166601{col 40}{space 1}    2.44{col 49}{space 3}0.015{col 57}{space 4} .0803647{col 70}{space 3} .7334286
+{txt}birth_year_1969 {c |}{col 17}{res}{space 2} .3752538{col 29}{space 2} .1584446{col 40}{space 1}    2.37{col 49}{space 3}0.018{col 57}{space 4}  .064708{col 70}{space 3} .6857996
+{txt}birth_year_1970 {c |}{col 17}{res}{space 2}  .315367{col 29}{space 2} .1566892{col 40}{space 1}    2.01{col 49}{space 3}0.044{col 57}{space 4} .0082619{col 70}{space 3} .6224721
+{txt}birth_year_1971 {c |}{col 17}{res}{space 2} .3596925{col 29}{space 2} .1649638{col 40}{space 1}    2.18{col 49}{space 3}0.029{col 57}{space 4} .0363695{col 70}{space 3} .6830156
+{txt}birth_year_1972 {c |}{col 17}{res}{space 2} .3332731{col 29}{space 2} .1526876{col 40}{space 1}    2.18{col 49}{space 3}0.029{col 57}{space 4} .0340109{col 70}{space 3} .6325353
+{txt}birth_year_1973 {c |}{col 17}{res}{space 2} .2970644{col 29}{space 2} .1510871{col 40}{space 1}    1.97{col 49}{space 3}0.049{col 57}{space 4} .0009391{col 70}{space 3} .5931898
+{txt}birth_year_1974 {c |}{col 17}{res}{space 2} .1748733{col 29}{space 2}   .14527{col 40}{space 1}    1.20{col 49}{space 3}0.229{col 57}{space 4}-.1098507{col 70}{space 3} .4595973
+{txt}birth_year_1975 {c |}{col 17}{res}{space 2} .2031159{col 29}{space 2}  .148863{col 40}{space 1}    1.36{col 49}{space 3}0.172{col 57}{space 4}-.0886502{col 70}{space 3} .4948819
+{txt}birth_year_1976 {c |}{col 17}{res}{space 2} .1860057{col 29}{space 2} .1448961{col 40}{space 1}    1.28{col 49}{space 3}0.199{col 57}{space 4}-.0979855{col 70}{space 3} .4699969
+{txt}birth_year_1977 {c |}{col 17}{res}{space 2} .0995422{col 29}{space 2}   .14467{col 40}{space 1}    0.69{col 49}{space 3}0.491{col 57}{space 4}-.1840058{col 70}{space 3} .3830903
+{txt}birth_year_1978 {c |}{col 17}{res}{space 2} .0927262{col 29}{space 2} .1445208{col 40}{space 1}    0.64{col 49}{space 3}0.521{col 57}{space 4}-.1905294{col 70}{space 3} .3759818
+{txt}birth_year_1979 {c |}{col 17}{res}{space 2} .0232503{col 29}{space 2} .1457811{col 40}{space 1}    0.16{col 49}{space 3}0.873{col 57}{space 4}-.2624754{col 70}{space 3} .3089759
+{txt}birth_year_1980 {c |}{col 17}{res}{space 2} .0562383{col 29}{space 2} .1456975{col 40}{space 1}    0.39{col 49}{space 3}0.700{col 57}{space 4}-.2293236{col 70}{space 3} .3418002
+{txt}birth_year_1981 {c |}{col 17}{res}{space 2}-.1369493{col 29}{space 2} .1640179{col 40}{space 1}   -0.83{col 49}{space 3}0.404{col 57}{space 4}-.4584184{col 70}{space 3} .1845198
+{txt}birth_year_1982 {c |}{col 17}{res}{space 2}-.0948956{col 29}{space 2}  .161929{col 40}{space 1}   -0.59{col 49}{space 3}0.558{col 57}{space 4}-.4122705{col 70}{space 3} .2224793
+{txt}birth_year_1983 {c |}{col 17}{res}{space 2} .0726784{col 29}{space 2} .1468085{col 40}{space 1}    0.50{col 49}{space 3}0.621{col 57}{space 4}-.2150609{col 70}{space 3} .3604178
+{txt}birth_year_1984 {c |}{col 17}{res}{space 2}-.1074927{col 29}{space 2} .1592275{col 40}{space 1}   -0.68{col 49}{space 3}0.500{col 57}{space 4}-.4195728{col 70}{space 3} .2045874
+{txt}birth_year_1985 {c |}{col 17}{res}{space 2} -.153127{col 29}{space 2} .1647873{col 40}{space 1}   -0.93{col 49}{space 3}0.353{col 57}{space 4}-.4761041{col 70}{space 3} .1698501
+{txt}birth_year_1986 {c |}{col 17}{res}{space 2}-.2145309{col 29}{space 2} .1759011{col 40}{space 1}   -1.22{col 49}{space 3}0.223{col 57}{space 4}-.5592907{col 70}{space 3} .1302289
+{txt}birth_year_1987 {c |}{col 17}{res}{space 2}-.0927187{col 29}{space 2} .1635897{col 40}{space 1}   -0.57{col 49}{space 3}0.571{col 57}{space 4}-.4133487{col 70}{space 3} .2279112
+{txt}birth_year_1988 {c |}{col 17}{res}{space 2}        0{col 29}{txt}  (omitted)
+{space 10}_cons {c |}{col 17}{res}{space 2}-119.6863{col 29}{space 2} 47.35174{col 40}{space 1}   -2.53{col 49}{space 3}0.011{col 57}{space 4} -212.494{col 70}{space 3}-26.87862
+{txt}{hline 16}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{help ivreg2##idtest:Underidentification test} (Anderson canon. corr. LM statistic):{res}{col 71}   7.720
+{txt}{col 52}Chi-sq({res}7{txt}) P-val =  {res}{col 73}0.3579
+{txt}{hline 78}
+{help ivreg2##widtest:Weak identification test} (Cragg-Donald Wald F statistic):{res}{col 71}   1.101
+{txt}Stock-Yogo weak ID test critical values:{res}{txt}{col 42} 5% maximal IV relative bias{res}{col 73} 19.86
+{txt}{col 42}10% maximal IV relative bias{res}{col 73} 11.29
+{txt}{col 42}20% maximal IV relative bias{res}{col 73}  6.73
+{txt}{col 42}30% maximal IV relative bias{res}{col 73}  5.07
+{txt}{col 42}10% maximal IV size{res}{col 73} 31.50
+{txt}{col 42}15% maximal IV size{res}{col 73} 17.38
+{txt}{col 42}20% maximal IV size{res}{col 73} 12.48
+{txt}{col 42}25% maximal IV size{res}{col 73}  9.93
+{txt}Source: Stock-Yogo (2005).  Reproduced by permission.
+{hline 78}
+{help ivreg2##overidtests:Sargan statistic} (overidentification test of all instruments):{res}{col 71}  12.879
+{txt}{col 52}Chi-sq({res}6{txt}) P-val =  {res}{col 73}0.0450
+{txt}{hline 78}
+Instrumented:{col 23}lbody_height
+Included instruments:{col 23}birth_year_1939 birth_year_1940 birth_year_1941
+{col 23}birth_year_1942 birth_year_1943 birth_year_1944
+{col 23}birth_year_1945 birth_year_1946 birth_year_1947
+{col 23}birth_year_1948 birth_year_1949 birth_year_1950
+{col 23}birth_year_1951 birth_year_1952 birth_year_1953
+{col 23}birth_year_1954 birth_year_1955 birth_year_1956
+{col 23}birth_year_1957 birth_year_1958 birth_year_1959
+{col 23}birth_year_1960 birth_year_1961 birth_year_1962
+{col 23}birth_year_1963 birth_year_1964 birth_year_1965
+{col 23}birth_year_1966 birth_year_1967 birth_year_1968
+{col 23}birth_year_1969 birth_year_1970 birth_year_1971
+{col 23}birth_year_1972 birth_year_1973 birth_year_1974
+{col 23}birth_year_1975 birth_year_1976 birth_year_1977
+{col 23}birth_year_1978 birth_year_1979 birth_year_1980
+{col 23}birth_year_1981 birth_year_1982 birth_year_1983
+{col 23}birth_year_1984 birth_year_1985 birth_year_1986
+{col 23}birth_year_1987
+Excluded instruments:{col 23}rs74442556_T rs68168662_C rs79423270_T rs287006_A
+{col 23}rs7337566_G rs16967933_T rs3810209_G
+Dropped collinear:{col 23}birth_year_1988
+{hline 78}
+
+{com}. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\user\Documents\GitHub\GWAS\l_income_self_sl1e-5_merge_and_regression_result_on_snps_and_birth_year_qui.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}21 Jul 2021, 09:57:53
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
