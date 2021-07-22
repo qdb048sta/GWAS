@@ -1,7 +1,7 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
-log using "20210721_GWAS_l_income_self.log",replace
+log using "20210721_GWAS_on_lbody_height.log",replace
 
 clear all
 macro drop _all
@@ -88,8 +88,8 @@ global pcs 10
 
 // set phenotypes
 //global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
-//global phenos "lbody_height"
-global phenos "l_income_self"
+global phenos "lbody_height"
+//global phenos "l_income_self"
 // global phenos "eduyrs"
 
 // set significant levels (p-values) for clumping
