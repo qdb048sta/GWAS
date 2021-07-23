@@ -1,7 +1,7 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
-log using "20210721_GWAS_on_lbody_height.log",replace
+log using "20210722_GWAS_on_lbody_height_change_sig1e-6.log",replace
 
 clear all
 macro drop _all
@@ -93,8 +93,8 @@ global phenos "lbody_height"
 // global phenos "eduyrs"
 
 // set significant levels (p-values) for clumping
-global siglevel_list "0.00000005 0.000001 0.00001"
-//global siglevel_list "0.00001"
+//global siglevel_list "0.00000005 0.000001 0.00001"
+global siglevel_list "0.000001 0.000005"
 
 // global siglevel_list "0.000001"
 
@@ -813,6 +813,9 @@ foreach s of global sex{
 			}
 			if "`sl'"=="0.00001"{
 				local sig = "1e-5"
+			}
+			if "`sl'"=="0.000005"{
+				local sig = "1e-6"
 			}
 			
 			global name7 = "${filename}D_gwas`ss'_clumped_`p'_pc${pcs}_sl`sig'"

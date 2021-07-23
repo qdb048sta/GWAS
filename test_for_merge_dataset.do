@@ -1,4 +1,4 @@
-log using "C:\TWB_2021\20210722_ivreg2_snps_based_lbody_height_sl1e-5_result_on_snps_and_birth_year_below_age55_snpsall_separated",replace 
+log using "C:\TWB_2021\20210722_semipar_snps_based_lbody_height_sl1e-5_below_age55",replace 
 local sexlist "m f a"
 foreach s of local sexlist{
     qui import delimited "C:\TWB_2021\TWB1+2_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
@@ -36,6 +36,8 @@ foreach s of local sexlist{
 	
 		
 	}
+	gen age_sqr=sqrt(AGE)
+	rename AGE age
 	display "======================================================================================================="
 	display "=====================This is ivreg2 regression result of sex : `s' ===================================="
 	display "======================================================================================================="
@@ -48,7 +50,11 @@ foreach s of local sexlist{
 	if "`s'"=="a"{
 	    display "==================================================================================================="
 		display "========================This is sex == a snips but only run male part=============================="
-	    ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==1 ,first 
+	    //ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==1 ,first 
+		reg lbody_height rs* age age_sqr if AGE<=55 & SEX==1
+		predict r_lbh, resid if AGE<=55 & SEX==1
+ 
+		semipar l_income_self r_lbh age age_sqr if AGE<=55 & SEX==1 , nonpar(lbody_height) ci robust test(2) 
 		sum BODY_HEIGHT if SEX==1 ,detail
 		sum lbody_height if SEX==1,detail
 		sum income if SEX==1,detail
@@ -58,7 +64,11 @@ foreach s of local sexlist{
 		 display "==================================================================================================="
 		display "==================================================================================================="
 		display "========================This is sex == a snips but only run female part============================"
-		ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==2 ,first 
+		//ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==2 ,first 
+		reg lbody_height rs* age age_sqr if AGE<=55 & SEX==2
+		predict r_lbh, resid if AGE<=55 & SEX==2
+ 
+		semipar l_income_self r_lbh age age_sqr if AGE<=55 & SEX==2 , nonpar(lbody_height) ci robust test(2) 
 		sum BODY_HEIGHT if SEX==2 ,detail
 		sum lbody_height if SEX==2,detail
 		sum income if SEX==2,detail
@@ -69,7 +79,11 @@ foreach s of local sexlist{
 
 	}
 	else{
-	    ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 ,first 
+	    //ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 ,first 
+		reg lbody_height rs* age age_sqr
+		predict r_lbh, resid
+ 
+		semipar l_income_self r_lbh age age_sqr, nonpar(lbody_height) ci robust test(2) 
 		///check sample part
 		display "======================================================================================================="
 		sum BODY_HEIGHT ,detail
