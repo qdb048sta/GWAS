@@ -1,7 +1,7 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
-log using "20210720_GWAS_income_self.log",replace
+log using "20210722_GWAS_on_lbody_height_change_sig1e-6.log",replace
 
 clear all
 macro drop _all
@@ -88,13 +88,13 @@ global pcs 10
 
 // set phenotypes
 //global phenos "eduyrs lbody_height BODY_HEIGHT BMI"
-//global phenos "lbody_height"
-global phenos "l_income_self"
+global phenos "lbody_height"
+//global phenos "l_income_self"
 // global phenos "eduyrs"
 
 // set significant levels (p-values) for clumping
-//global siglevel_list "0.00000005 0.000001"
-global siglevel_list "0.00001"
+//global siglevel_list "0.00000005 0.000001 0.00001"
+global siglevel_list "0.000001 0.000005"
 
 // global siglevel_list "0.000001"
 
@@ -524,7 +524,7 @@ global vars ""
 	
 foreach s of global sex{
 	local ss `s'
-	global keepfile = "02_twb1+2_input`ss'_30K_20201116.txt"
+	global keepfile = "C:\TWB_2021\02_twb1+2_input`ss'_30K_20210720.txt"
 	
 	
 	/*
@@ -814,6 +814,9 @@ foreach s of global sex{
 			if "`sl'"=="0.00001"{
 				local sig = "1e-5"
 			}
+			if "`sl'"=="0.000005"{
+				local sig = "1e-6"
+			}
 			
 			global name7 = "${filename}D_gwas`ss'_clumped_`p'_pc${pcs}_sl`sig'"
 			global name8 = "${name7}_index_SNPs"
@@ -827,7 +830,7 @@ foreach s of global sex{
 
 				//shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID /// (problems might come from here because of no --pheno)
 				//		--clump-p1 `sl' --clump-p2 `sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
-				shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID --pheno "${name2}.txt" --pheno-name `p' ///
+				shell "$plinkpath" --bfile "${QC0}" --clump "${name4}.txt" --clump-snp-field ID  ///
 						--clump-p1 `sl' --clump-p2 `sl' --clump-r2 $setclumpr2 --clump-kb $setclumpkb --out "${name7}"
 						
 				timer off 1
@@ -885,7 +888,7 @@ foreach s of global sex{
 					qui export delimited using "${name8}.txt", nolab delimiter(tab) replace
 					//shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 3 6 9 header  ///
 					//		--extract "${name8}.txt" --out "${name9}" this one does not have pheno
-					shell "$plinkpath" --bfile "${QC0}" --pheno "${name2}.txt" --pheno-name `p' --score "${name4}.txt" 3 6 9 header  ///
+					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 3 6 9 header  ///
 							--extract "${name8}.txt" --out "${name9}"
 // 					shell "$plinkpath" --bfile "${QC0}" --score "${name4}.txt" 2 4 9 header  ///
 // 							--extract "${name8}.txt" --out "${name9}"							
@@ -941,7 +944,7 @@ foreach s of global sex{
 					//shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
 					//		--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
 					//		--output-missing-genotype N --out "${name10}"
-					shell "$plinkpath" --bfile "${QC0}" --pheno "${name2}.txt" --pheno-name `p' --extract "${name8}.txt" ///
+					shell "$plinkpath" --bfile "${QC0}" --extract "${name8}.txt" ///
 							--recode A tab --recode-allele "${name4}_SNP+A_only.txt" ///
 							--output-missing-genotype N --out "${name10}"
 							
