@@ -1,21 +1,21 @@
-log using "C:\TWB_2021\20210722_generating_dataset_snps_based_lbody_height_sl1e-5_below_age55",replace 
+/*log using "C:\TWB_2021\20210722_generating_dataset_snps_based_lbody_height_sl1e-6_below_age55",replace 
 local sexlist "m f a"
 foreach s of local sexlist{
     qui import delimited "C:\TWB_2021\TWB1+2_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
 	qui save "C:\TWB_2021\TWB1+2_imp_B_gwas_`s'_covar+pc_dta.dta",replace
-	qui import delimited "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
+	qui import delimited "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-6_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
 	qui merge 1:1 IID FID using "C:\TWB_2021\TWB1+2_imp_B_gwas_`s'_covar+pc_dta.dta",keep(match)
-	qui save "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded_dta.dta", replace
+	qui save "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-6_recoded_dta.dta", replace
 	
 	
 }
 //diff
 log close
 ///////////////////////////////ivreg2_result////////////////////////////////////////////////////////////////////////////////////////////////////////
-log using "C:\TWB_2021\20210722_ivreg2_snps_based_lbody_height_sl1e-5_below_age55",replace 
+log using "C:\TWB_2021\20210722_ivreg2_snps_based_lbody_height_sl1e-6_below_age55",replace 
 local sexlist "m f a"
 foreach s of local sexlist{
-	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded_dta.dta",clear
+	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-6_recoded_dta.dta",clear
 	qui levelsof birth_year,local(birth_year_list)
 	foreach b of local birth_year_list{
 		qui gen birth_year_`b'=0
@@ -157,12 +157,12 @@ foreach s of local sexlist{
 }
 log close
 
-
+*/
 // sempari part 
-log using "C:\TWB_2021\20210722_semipar_snps_based_lbody_height_sl1e-5_below_age55",replace 
+log using "C:\TWB_2021\20210722_semipar_snps_based_lbody_height_sl1e-6_below_age55",replace 
 local sexlist "m f a"
 foreach s of local sexlist{
-	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded_dta.dta",clear
+	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-6_recoded_dta.dta",clear
 	qui levelsof birth_year,local(birth_year_list)
 	foreach b of local birth_year_list{
 		qui gen birth_year_`b'=0
@@ -254,23 +254,26 @@ foreach s of local sexlist{
 		display "========================This is sex == a snips but only run male part=============================="
 	    //ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==1 ,first 
 		reg lbody_height rs* AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 & SEX==1
-		predict r_lbh, resid 
+		predict r_lbh_m if AGE<=55 & SEX==1, resid 
  
-		semipar l_income_self r_lbh AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==1 , nonpar(lbody_height) ci robust test(2) 
+		semipar l_income_self r_lbh_m AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==1 , nonpar(lbody_height) ci robust test(2) 
+		graph save "Graph" "C:\TWB_2021\sex_`s'_only_m_sle-6.gph",replace
+
 		sum BODY_HEIGHT if SEX==1 ,detail
 		sum lbody_height if SEX==1, detail
 		sum income if SEX==1,detail
 		sum l_income_self if SEX==1,detail 
 		sum SEX if SEX==1,detail
 		sum AGE if SEX==1,detail 
-		 display "==================================================================================================="
+		display "==================================================================================================="
 		display "==================================================================================================="
 		display "========================This is sex == a snips but only run female part============================"
 		//ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 & SEX==2 ,first 
 		reg lbody_height rs* AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==2
-		predict r_lbh, resid 
+		predict r_lbh_f if AGE<=55 & SEX==2, resid 
  
-		semipar l_income_self r_lbh AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 & SEX==2 , nonpar(lbody_height) ci robust test(2) 
+		semipar l_income_self r_lbh_f AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 & SEX==2 , nonpar(lbody_height) ci robust test(2) 
+		graph save "Graph" "C:\TWB_2021\sex_`s'_only_f_sle-6.gph",replace
 		sum BODY_HEIGHT if SEX==2 ,detail
 		sum lbody_height if SEX==2,detail
 		sum income if SEX==2,detail
@@ -286,6 +289,7 @@ foreach s of local sexlist{
 		predict r_lbh, resid
  
 		semipar l_income_self r_lbh AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55, nonpar(lbody_height) ci robust test(2) 
+		graph save "Graph" "C:\TWB_2021\sex_`s'_sle-6.gph",replace
 		///check sample part
 		display "======================================================================================================="
 		sum BODY_HEIGHT ,detail
