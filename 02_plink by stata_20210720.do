@@ -1,6 +1,8 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
+
+
 log using "20210722_GWAS_on_lbody_height_change_sig1e-6.log",replace
 
 clear all
@@ -14,10 +16,17 @@ global plinkpath "C:\plink\plink.exe"
 global plink2path "C:\plink2\plink2.exe"
 
 // set data path
-global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
+//global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
+//global data "C:\\TWB_2021\\TWB1_imputation_data\\TWB1.liftOverTohg38.impu.v1"
+
+
 //global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
 
 // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
+//global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
+global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
+//global data "C:\TWB_2021\TWB1_imputation_data\TWB1.liftOverTohg38.impu.v1"
+//global data "C:\TWB_2021\TWB2_imputation_data\TWB2.hg38.impu.v1"
 
 global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 // global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
@@ -57,7 +66,7 @@ if "$datatype"=="imputation"{
 }
 //---------------------------------------------------------------------------------
 // start from certain step, options include "" and elements in `steps'
-global start_from "pca" /*if "", detects whether files exist and start from latest step*/
+global start_from "QC1_maf" /*if "", detects whether files exist and start from latest step*/
 
 local steps = "QC1_maf QC2_miss QC3_bi QC4_sex QC5_chrom QC6_hwe QC7_het QC9_relate pca QC0_keep gwas clump prs recode"
 
@@ -94,9 +103,9 @@ global phenos "lbody_height"
 
 // set significant levels (p-values) for clumping
 //global siglevel_list "0.00000005 0.000001 0.00001"
-global siglevel_list "0.000001 0.000005"
+//global siglevel_list "0.000001 0.000005"
 
-// global siglevel_list "0.000001"
+ global siglevel_list "0.000001 0.00001"
 
 // set sex
 global sex "_m _f _a" /*f for female, m for male, a for all*/
