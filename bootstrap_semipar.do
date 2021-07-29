@@ -159,7 +159,7 @@ log close
 */
 
 // sempari part 
-log using "C:\TWB_2021\20210726_changed_semipar_snps_based_lbody_height_sl1e-5_below_age55",replace 
+log using "C:\TWB_2021\20210727_iterration_semipars_snps_based_lbody_height_sl1e-5_below_age55",replace 
 local sexlist "m f"
 foreach s of local sexlist{
 	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded_dta.dta",clear
@@ -294,25 +294,26 @@ foreach s of local sexlist{
 	}
 	else{
 	    //ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 ,first 
-		forvalues i=1/100{
+		forvalues i=1/3{
 		    set seed 123
 			bsample if AGE<=55
 			reg lbody_height rs* AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55
 			predict r_lbh`i', resid
 	 
-			semipar l_income_self r_lbh AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55, nonpar(lbody_height) gen(pre_lbh`i') ci
-			bysort lbody_height: gen ok=(_n==1) if AGE<=55
-			dydx pre_lbh`i' lbody_height if (ok==1) & (AGE<=55), gen(mar_lbh`i')
+			semipar l_income_self r_lbh`i' AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55, nonpar(lbody_height) gen(pre_lbh`i') ci
+			bysort lbody_height: gen ok`i'=(_n==1) if AGE<=55
+			dydx pre_lbh`i' lbody_height if (ok`i'==1) & (AGE<=55), gen(mar_lbh`i')
 			bysort lbody_height: replace mar_lbh`i'=mar_lbh`i'[1] if AGE<=55
+			preserve
 			keep lbody_height pre_lbh`i' mar_lbh`i'
-			save file`i'
+			save file`i',replace
+			restore
 			if `i'==1{
 			    save file0,replace
 				
 			}
 			else{
-			    merge 1:1
-				by l_body_height file0 file`i'
+			    merge 1:1 l_body_height file0 file`i'
 				drop _merge
 				save file0,repalce
 				
