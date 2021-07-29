@@ -22,11 +22,10 @@ global plink2path "C:\plink2\plink2.exe"
 
 //global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
 
-// global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
 //global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
-global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
+//global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
 //global data "C:\TWB_2021\TWB1_imputation_data\TWB1.liftOverTohg38.impu.v1"
-//global data "C:\TWB_2021\TWB2_imputation_data\TWB2.hg38.impu.v1"
+global data "C:\TWB_2021\TWB2_imputation_data\TWB2.hg38.impu.v1"
 
 global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 // global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
