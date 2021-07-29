@@ -1,4 +1,4 @@
-/*log using "C:\TWB_2021\20210722_generating_dataset_snps_based_lbody_height_sl1e-6_below_age55",replace 
+log using "C:\TWB_2021\20210722_generating_dataset_snps_based_lbody_height_sl1e-6_below_age55",replace 
 local sexlist "m f a"
 foreach s of local sexlist{
     qui import delimited "C:\TWB_2021\TWB1+2_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
@@ -157,7 +157,7 @@ foreach s of local sexlist{
 }
 log close
 
-*/
+/*
 // sempari part 
 log using "C:\TWB_2021\20210722_semipar_snps_based_lbody_height_sl1e-6_below_age55",replace 
 local sexlist "m f a"
@@ -306,6 +306,7 @@ foreach s of local sexlist{
 	
 
 }
+*/
 log close
 /* 
 occu_dummy=行業
