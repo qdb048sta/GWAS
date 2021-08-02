@@ -1,6 +1,6 @@
-log using "C:\TWB_2021\20210727_iterration_semipars_snps_based_lbody_height_sl1e-5_below_age55",replace 
-cd "C:\TWB_2021\20210728" // this is my working dr can be changed 
-local sexlist "f"
+//log using "C:\TWB_2021\20210727_iterration_semipars_snps_based_lbody_height_sl1e-5_below_age55",replace 
+cd "C:\TWB_2021\20210730" // this is my working dr can be changed 
+local sexlist "m f"
 
 foreach s of local sexlist{
 	qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-5_recoded_dta.dta",clear
@@ -84,7 +84,7 @@ foreach s of local sexlist{
 		replace pos_dummy_6=1 if (pos_list<1000) & (pos_list>=900)
 		replace pos_dummy_8=1 if (pos_list>=1000)
 		//
-		//keep as file
+		//keep first line as file
 		preserve 
 		reg lbody_height rs* AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55
 		predict r_lbh, resid
@@ -94,12 +94,18 @@ foreach s of local sexlist{
 		dydx pre_lbh lbody_height if (ok == 1) & (AGE<=55), gen(mar_lbh)
 		bysort lbody_height: replace mar_lbh=mar_lbh[1] if AGE<=55
 		keep lbody_height r_lbh pre_lbh mar_lbh
-		save "C:\\TWB_2021\\20210728\\`s'_file0.dta",replace 
-		restore 
-		//
-		forvalues l =1(1)100{
+		save "C:\\TWB_2021\\20210730\\`s'_file0.dta",replace 
+		
+		
+		//iteration part
+		local r=100
+		local 5pt=round(`r'*0.025)
+		local 5pt_1=`5pt'
+		set seed 1234
 
-		set seed 123
+		forvalues l =1(1)100{
+		restore
+		preserve 
 		bsample if AGE<=55
 		reg lbody_height rs* AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55
 		predict r_lbh`l', resid
@@ -108,24 +114,95 @@ foreach s of local sexlist{
 		bysort lbody_height: gen ok`l'=1 if (_n == 1) & (AGE<=55)
 		dydx pre_lbh`l' lbody_height if (ok`l' == 1) & (AGE<=55), gen(mar_lbh`l')
 		bysort lbody_height: replace mar_lbh`l'=mar_lbh`l'[1] if AGE<=55
-		preserve
 		keep lbody_height r_lbh`l' pre_lbh`l' mar_lbh`l'
-		//save file`i',replace
 		
 
-		if `l' == 1 {
+		
+
+		
+		
+
+		if `l' == 0 {
 			display "`l'"
-			save "C:\\TWB_2021\\20210728\\`s'_file1.dta",replace
+			/*replace r_lbh`l'=round(r_lbh`l'*1000000)
+			replace pre_lbh`l'=round(pre_lbh`l'*1000000)
+			replace mar_lbh`l'=round(mar_lbh`l'*100000)*/
+			gen ci_linc_rlbh_t1=r_lbh`l'
+			gen ci_linc_prelbh_t1= pre_lbh`l'
+			gen ci_linc_marlbh_t1=mar_lbh`l'
+			gen ci_linc_rlbh_b1=r_lbh`l'
+			gen ci_linc_prelbh_b1 =pre_lbh`l'
+			gen ci_linc_marlbh_b1=mar_lbh`l'
+			
+			gen ci_linc_rlbh_t2=r_lbh`l'
+			gen ci_linc_prelbh_t2= pre_lbh`l'
+			gen ci_linc_marlbh_t2=mar_lbh`l'
+			gen ci_linc_rlbh_b2=r_lbh`l'
+			gen ci_linc_prelbh_b2= pre_lbh`l'
+	        gen ci_linc_marlbh_b2=mar_lbh`l'
+			
+			save "C:\\TWB_2021\\20210730\\`s'_file1.dta",replace
+
 					
 					}
 		else{
-			merge m:m lbody_height using "C:\\TWB_2021\\20210728\\`s'_file1.dta"
+			display "`l'"
+			/*replace r_lbh`l'=round(r_lbh`l'*1000000)
+			replace pre_lbh`l'=round(pre_lbh`l'*1000000)
+			replace mar_lbh`l'=round(mar_lbh`l'*1000000)*/
+			gen ci_linc_rlbh_t`5pt_1'=r_lbh`l'
+			gen ci_linc_prelbh_t`5pt_1'= pre_lbh`l'
+			gen ci_linc_marlbh_t`5pt_1'=mar_lbh`l'
+		
+		
+			gen  ci_linc_rlbh_b`5pt_1'=r_lbh`l'
+			gen ci_linc_prelbh_b`5pt_1'=pre_lbh`l' 
+			gen  ci_linc_marlbh_b`5pt_1'=mar_lbh`l'
+			merge m:m lbody_height using "C:\\TWB_2021\\20210730\\`s'_file1.dta"
+
 			keep if _merge==3
 			drop _merge
-			save "C:\\TWB_2021\\20210728\\`s'_file1.dta", replace
+		
+			
+			//rowsort
+			sortrows ci_linc_rlbh_t1 ci_linc_rlbh_t2 ci_linc_rlbh_t`5pt_1', gen(pre_linc_rlbh_t1 pre_linc_rlbh_t2 pre_linc_rlbh_t`5pt_1') descending
+			sortrows ci_linc_prelbh_t1 ci_linc_prelbh_t2 ci_linc_prelbh_t`5pt_1',gen(pre_linc_prelbh_t1 pre_linc_prelbh_t2 pre_linc_prelbh_t`5pt_1')descending
+			sortrows ci_linc_marlbh_t1 ci_linc_marlbh_t2 ci_linc_marlbh_t`5pt_1',gen(pre_linc_marlbh_t1 pre_linc_marlbh_t2 pre_linc_marlbh_t`5pt_1') descending
+
+			sortrows ci_linc_rlbh_b1 ci_linc_rlbh_b2 ci_linc_rlbh_b`5pt_1',gen(pre_linc_rlbh_b1 pre_linc_rlbh_b2 pre_linc_rlbh_b`5pt_1') 
+			sortrows ci_linc_prelbh_b1 ci_linc_prelbh_b2 ci_linc_prelbh_b`5pt_1',gen(pre_linc_prelbh_b1 pre_linc_prelbh_b2 pre_linc_prelbh_b`5pt_1') 
+			sortrows ci_linc_marlbh_b1 ci_linc_marlbh_b2 ci_linc_marlbh_b`5pt_1',gen(pre_linc_marlbh_b1 pre_linc_marlbh_b2 pre_linc_marlbh_b`5pt_1') 
+
+			drop ci_linc_rlbh_t1 ci_linc_rlbh_t2 ci_linc_rlbh_t`5pt_1'
+			rename pre_linc_rlbh_t1 ci_linc_rlbh_t1
+			rename pre_linc_rlbh_t2 ci_linc_rlbh_t2
+			
+			drop ci_linc_prelbh_t1 ci_linc_prelbh_t2 ci_linc_prelbh_t`5pt_1'
+			rename pre_linc_prelbh_t1 ci_linc_prelbh_t1
+			rename pre_linc_prelbh_t2 ci_linc_prelbh_t2
+			
+			drop ci_linc_marlbh_t1 ci_linc_marlbh_t2 ci_linc_marlbh_t`5pt_1'
+			rename pre_linc_marlbh_t1 ci_linc_marlbh_t1
+			rename pre_linc_marlbh_t2 ci_linc_marlbh_t2
+			
+			drop ci_linc_rlbh_b1 ci_linc_rlbh_b2 ci_linc_rlbh_b`5pt_1'
+			rename pre_linc_rlbh_b1 ci_linc_rlbh_b1
+			rename pre_linc_rlbh_b2 ci_linc_rlbh_b2
+			
+			drop ci_linc_prelbh_b1 ci_linc_prelbh_b2 ci_linc_prelbh_b`5pt_1'
+			rename pre_linc_prelbh_b1 ci_linc_prelbh_b1
+			rename pre_linc_prelbh_b2 ci_linc_prelbh_b2
+			
+			drop ci_linc_marlbh_b1 ci_linc_marlbh_b2 ci_linc_marlbh_b`5pt_1'
+			rename pre_linc_marlbh_b1 ci_linc_marlbh_b1
+			rename pre_linc_marlbh_b2 ci_linc_marlbh_b2
+			
+			
+			keep lbody_height ci_linc_* r_lbh`l' pre_lbh`l' mar_lbh`l'  //I save the old value for checking 
+			save "C:\\TWB_2021\\20210730\\`s'_file1.dta", replace
 					
-				}
-		restore
+				} 
+		
 	}
 	
 }
