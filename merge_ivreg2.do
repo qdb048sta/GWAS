@@ -1,4 +1,4 @@
-log using "C:\TWB_2021\20210727_generating_dataset_snps_based_lbody_height_below_age55",replace 
+log using "C:\\TWB_2021\\20210730\\generating_dataset_snps_based_lbody_height_below_age55",replace 
 local sllist "sl1e-6 sl1e-5"
 local twblist "TWB1 TWB2"
 local sexlist "m f a"
@@ -6,23 +6,23 @@ foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
 			
-			qui import delimited "C:\\TWB_2021\\`twb'_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
-			qui save "C:\\TWB_2021\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",replace
-			qui import delimited "C:\\TWB_2021\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
-			qui merge 1:1 IID FID using "C:\\TWB_2021\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",keep(match)
-			qui save "C:\\TWB_2021\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl_recoded_dta.dta", replace
+			qui import delimited "C:\\TWB_2021\\TWB_2021_covar_dataset\\`twb'_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
+			qui save "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",replace
+			qui import delimited "C:\\TWB_2021\\TWB_2021_raw_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
+			qui merge 1:1 IID FID using "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",keep(match)
+			qui save "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta", replace
 			
 			}
 //diff
 	}
 }
 log close
-log using "C:\TWB_2021\20210722_ivreg2_snps_based_lbody_height_sl1e-6_below_age55",replace 
+log using "C:\\TWB_2021\\20210730\\20210730_ivreg2_snps_based_lbody_height_below_age55",replace 
 
 foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
-			qui use "C:\TWB_2021\TWB1+2_imp_F_gwas_`s'_lbody_height_pc10_sl1e-6_recoded_dta.dta",clear
+			qui use "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
 			qui levelsof birth_year,local(birth_year_list)
 			foreach b of local birth_year_list{
 				qui gen birth_year_`b'=0
@@ -97,19 +97,23 @@ foreach twb of local twblist{
 			replace pos_dummy_6=1 if (pos_list<1000) & (pos_list>=900)
 			replace pos_dummy_8=1 if (pos_list>=1000)
 			//
-			display "======================================================================================================="
-			display "=====================This is ivreg2 regression result of sex : `s' ===================================="
-			display "======================================================================================================="
-			display "=====================Total Sample sex== `s'============================================================"
+			display "========================================================================================================================================"
+			display "=====================This is ivreg2 regression result of TWB:`twb' Significant Level:`sl' Sex : `s' ===================================="
+			display "========================================================================================================================================"
+			display "=====================Total Sample sex== `s'============================================================================================="
 			count 
-			display "=====================Number of age<=55 and sex == `s' ================================================="
+			display "=====================Number of age<=55 and TWB:`twb' Significant Level:`sl' Sex : `s'==================================================="
 			count if AGE<=55
-			display "======================================================================================================="
+			display "========================================================================================================================================"
 			//ivreg2 l_income_self (lbody_height=rs*) birth_year_* if AGE<=55 ,first 
 			if "`s'"=="a"{
-				display "==================================================================================================="
-				display "========================This is sex == a snips but only run male part=============================="
-				ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*   if AGE<=55 & SEX==1 ,first 
+				display "===================================================================================================================================="
+				display "========================This is sex == a snips but only run male part================================================================"
+				cap ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*   if AGE<=55 & SEX==1 ,first 
+				if _rc!=0{
+					display "================IVREG2 WRONG in sex==a  NO SEX DATA put it all together and run SEX==0 ================================================================="
+					ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first
+				}
 				/*reg lbody_height rs* age age_sqr if AGE<=55 & SEX==1
 				predict r_lbh, resid if AGE<=55 & SEX==1
 		 
@@ -120,10 +124,14 @@ foreach twb of local twblist{
 				sum l_income_self if SEX==1,detail 
 				sum SEX if SEX==1,detail
 				sum AGE if SEX==1,detail 
-				 display "==================================================================================================="
+				display "==================================================================================================="
 				display "==================================================================================================="
 				display "========================This is sex == a snips but only run female part============================"
-				ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==2 ,first 
+				cap ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==2 ,first
+				if _rc!=0{
+					display "================IVREG2 WRONG in sex==a  NO SEX DATA put it all together and run SEX==0 ================================================================="
+					ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first
+				}
 				/*reg lbody_height rs* age age_sqr if AGE<=55 & SEX==2
 				predict r_lbh, resid if AGE<=55 & SEX==2
 		 
@@ -138,7 +146,10 @@ foreach twb of local twblist{
 
 			}
 			else{
-				ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first 
+				cap ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first 
+				if _rc!=0{
+					display "================IVREG2 WRONG================================================================="
+				}
 				/*reg lbody_height rs* age age_sqr
 				predict r_lbh, resid
 		 
@@ -166,9 +177,6 @@ foreach twb of local twblist{
 ///////////////////////////////ivreg2_result////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 log close
-		
-	}
-}
 
 
 /*
@@ -321,7 +329,7 @@ foreach s of local sexlist{
 
 }
 */
-log close
+
 /* 
 occu_dummy=行業
 pos_dummy=職位
