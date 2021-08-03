@@ -2,7 +2,8 @@
 // note: TWB1+TWB2 participants 
 
 // cd "E:\Data\Gene\trial11_20201130"
-// global merged_survey "D:\User_Data\Desktop\基因\questionnaires\stata clean survey data\twbiobank_merged_20201109"  
+cd "C:\TWB_2021\checking_missing"
+global merged_survey "C:\TWB_2021\checking_missing\twbiobank_merged_20201109"  
 // /*編號00 do檔製造出來的問卷資料*/
 
 //---------------------------------------------------------------------------------
@@ -17,6 +18,8 @@ foreach time of numlist 1/2{
 
 		rename TWB`time'_ID IID
 		qui g FID = IID
+		unique IID
+		unique FID
 
 		g eduyrs = . /*1=未受過正規教育，不識字、2=自修，識字、3=小學、4=國(初)中、5=高中(職)、6=大學(專)、7=研究所及以上*/
 		replace eduyrs = 0 if EDUCATION == "1" | EDUCATION == "2"
@@ -75,8 +78,12 @@ foreach time of numlist 1/2{
 
 		// 丟掉重複ID
 		g n = _n
+		unique IID
+		unique FID
 		gsort IID -AGE
 		duplicates drop IID, force
+		unique IID
+		unique FID
 		sort n
 		drop n
 		
@@ -88,10 +95,13 @@ foreach time of numlist 1/2{
 
 
 // TWB1+2 append
+
 use `savetwb1', clear
 append using `savetwb2'
+unique IID
+unique FID
+//drop TWB1_ID TWB2_ID
 
-drop TWB1_ID TWB2_ID
 // tempfile savetwb
 // save `savetwb'
 
@@ -121,6 +131,9 @@ cap replace `l'="-9" if `l'==""
 unab all: _all
 local vars =" `all'"
 
+unique IID
+unique FID
+
 foreach l of local vars{
 cap replace `l' = ustrregexra(`l'," ","") 
 cap replace `l' = ustrregexra(`l',":","") 
@@ -132,6 +145,8 @@ cap replace `l' = ustrregexra(`l',"≧","GoET")
 }
 
 
+gen twb1c=1 if !missing(TWB1_ID)
+gen twb2c=1 if !missing(TWB2_ID)
 
 
 		
@@ -148,9 +163,12 @@ foreach s of local sex{
 			if "`s'"=="_m_"{
 				qui keep if SEX==1
 			}
+			unique FID
+			count if twb1c==1
+			count if twb2c==1
 			compress
-			export delimited using "02_twb1+2_input`s'100K_20201116.txt" ///
-			, nolab delimiter(tab) replace
+			export delimited using "02_twb1+2_input`s'100K_20201116.txt"  ///
+			,nolab delimiter(tab) replace
 // 			local obs =  _N
 // 			di "`s' `i' `obs' "
 			
@@ -160,6 +178,9 @@ foreach s of local sex{
 
 // 保留有 個人或家庭薪水 及 教育或身高者
 keep if (inc_self_mid!=-9|inc_family_mid!=-9) & (eduyrs!=-9 | BODY_HEIGHT!=-9)
+unique IID
+unique FID
+
 
 local sex "_f_ _m_ _a_"
 
@@ -173,8 +194,12 @@ foreach s of local sex{
 			if "`s'"=="_m_"{
 				qui keep if SEX==1
 			}
+			unique FID
+			count if twb1c==1
+			count if twb2c==1
+
 			compress
-			export delimited using "02_twb1+2_input`s'30K_20201116.txt" ///
+			export delimited using "02_twb1+2_input`s'30K_20201116.txt",replace ///
 			, nolab delimiter(tab) replace
 // 			local obs =  _N
 // 			di "`s' `i' `obs' "

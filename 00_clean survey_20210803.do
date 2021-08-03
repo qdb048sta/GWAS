@@ -2529,6 +2529,8 @@ qui save "`name3'", replace
 qui import delimited "`ques4'", ///
 	encoding(big5) case(preserve) clear
 unique Release_No
+unique TWB1_ID 
+unique TWB2_ID
 keep Release_No AADQ_No TWB1_ID TWB2_ID
 qui compress
 qui save "`name4'", replace
@@ -2536,8 +2538,11 @@ qui save "`name4'", replace
 //------------------------------------------------------------------------------------
 use "`name4'", clear
 qui merge 1:m  Release_No using "`name3'", keep(master using match) nogen
+unique Release_No
 qui merge 1:1 Release_No FOLLOW using "`name2'", keep(master using match) nogen
+unique Release_No
 qui merge 1:1 Release_No FOLLOW using "`name1'", keep(master using match) nogen
+unique Release_No
 qui compress
 qui save "`name'", replace
 
