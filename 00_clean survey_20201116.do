@@ -4,10 +4,10 @@
 //			with variable labels 
 //			change fam file into file with sex information if imputed data
 
-cd "C:\Data\TWBioBank"  /*where to save survey data*/
+cd "C:\TWB_2021\checking_missing"  /*where to save survey data*/
 
-global raw123 = "C:\Data\TWBioBank\TWBR10810-06_Dataland" /*where raw survey data is located in*/
-global raw4 = "C:\Data\TWBioBank\TWBR10810-06_Codebook" /*where raw survey data is located in*/
+global raw123 = "C:\TWB_2021\TWBR10810-06_Dataland" /*where raw survey data is located in*/
+global raw4 = "C:\TWB_2021\TWBR10810-06_Codebook" /*where raw survey data is located in*/
 
 //===================================================================
 /*raw survey data*/
@@ -2528,7 +2528,7 @@ qui save "`name3'", replace
 //------------------------------------------------------------------------------------
 qui import delimited "`ques4'", ///
 	encoding(big5) case(preserve) clear
-
+unique Release_No
 keep Release_No AADQ_No TWB1_ID TWB2_ID
 qui compress
 qui save "`name4'", replace
