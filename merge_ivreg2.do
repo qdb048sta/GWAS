@@ -1,7 +1,11 @@
 log using "C:\\TWB_2021\\20210730\\generating_dataset_snps_based_lbody_height_below_age55",replace 
 local sllist "sl1e-6 sl1e-5"
 local twblist "TWB1 TWB2"
+local twblist "TWB2"
+
 local sexlist "m f a"
+local sexlist "a"
+
 foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
