@@ -15,6 +15,7 @@ foreach time of numlist 1/2{
 	frame create twb`time'
 	frame twb`time'{
 		use if TWB`time'_ID!="" using "${merged_survey}", clear
+		gen twb`time'c=1 if !missing(TWB`time'_ID)
 
 		rename TWB`time'_ID IID
 		qui g FID = IID
@@ -145,8 +146,7 @@ cap replace `l' = ustrregexra(`l',"≧","GoET")
 }
 
 
-gen twb1c=1 if !missing(TWB1_ID)
-gen twb2c=1 if !missing(TWB2_ID)
+
 
 
 		
@@ -199,7 +199,7 @@ foreach s of local sex{
 			count if twb2c==1
 
 			compress
-			export delimited using "02_twb1+2_input`s'30K_20201116.txt",replace ///
+			export delimited using "02_twb1+2_input`s'30K_20201116.txt" ///
 			, nolab delimiter(tab) replace
 // 			local obs =  _N
 // 			di "`s' `i' `obs' "
