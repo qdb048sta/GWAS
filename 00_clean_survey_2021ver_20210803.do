@@ -3,7 +3,7 @@
 // Step 0. survey data csv -> dta
 //			with variable labels 
 //			change fam file into file with sex information if imputed data
-
+log using "C:\TWB_2021\20210803\redo_survey.log",replace
 cd "C:\TWB_2021\20210803"  /*where to save survey data*/
 
 global raw123 = "C:\TWB_2021\TWBR10810-06_Dataland" /*where raw survey data is located in*/
@@ -2543,6 +2543,8 @@ qui merge 1:1 Release_No FOLLOW using "`name2'", keep(master using match) nogen
 unique Release_No
 qui merge 1:1 Release_No FOLLOW using "`name1'", keep(master using match) nogen
 unique Release_No
+unique TWB1_ID
+unique TWB2_ID
 qui compress
 qui save "`name'", replace
 //so the "name should have == unique release no"
@@ -2759,7 +2761,7 @@ foreach s of local sex{
 		}/*frame*/	
 }/*sex*/
 
-
+log close
 
 
 
