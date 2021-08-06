@@ -3,7 +3,7 @@
 
 
 
-log using "20210722_GWAS_on_lbody_height_change_sig1e-6.log",replace
+log using "20210804_GWAS_on_lbody_height_change_TWB_sep.log",replace
 
 clear all
 macro drop _all
@@ -14,6 +14,20 @@ cd "C:\TWB_2021"
 // set path for plink
 global plinkpath "C:\plink\plink.exe"
 global plink2path "C:\plink2\plink2.exe"
+global datatwb1 "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
+global datatwb2 "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
+local datafile "$datatwb2"
+foreach dataf of local datafile{
+    if "`dataf'"=="C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"{
+	    global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
+		cd "C:\TWB_2021\20210804_TWB1_gwas_result"
+	}
+	if "`dataf'"=="C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"{
+	    global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
+		cd "C:\TWB_2021\20210804_TWB2_gwas_result"
+	}
+	
+
 
 // set data path
 //global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
@@ -22,19 +36,17 @@ global plink2path "C:\plink2\plink2.exe"
 
 //global data_one_tenth "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1_10"
 
-//global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
-//global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
+
 //global data "C:\TWB_2021\TWB1_imputation_data\TWB1.liftOverTohg38.impu.v1"
-global data "C:\TWB_2021\TWB2_imputation_data\TWB2.hg38.impu.v1"
+//global data "C:\TWB_2021\TWB2_imputation_data\TWB2.hg38.impu.v1"
 
-global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
-// global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
+//global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
+global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 
-
-global merged_survey "C:\TWB\twbiobank_merged_20201109"  
+global merged_survey "C:\TWB\twbiobank_merged_20210803"  
 /*編號00 do檔製造出來的問卷資料*/
 
-global do01 "01_plink survey data input_20201116" /*編號01 do檔名稱/位置*/
+global do01 "01_plink survey data input_20210803" /*編號01 do檔名稱/位置*/
 
 
 /*
@@ -532,7 +544,7 @@ global vars ""
 	
 foreach s of global sex{
 	local ss `s'
-	global keepfile = "C:\TWB_2021\02_twb1+2_input`ss'_30K_20210720.txt"
+	global keepfile = "C:\TWB_2021\02_twb1+2_input`ss'_30K_20210803.txt"
 	
 	
 	/*
@@ -997,7 +1009,7 @@ foreach s of global sex{
 	}/*pheno*/
 	di "========================================="
 }/*sex*/
-
+}
 log close
 
 	

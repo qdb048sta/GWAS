@@ -1,7 +1,7 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
-log using "20210720_GWAS_income_self.log",replace
+log using "20210803_GWAS_income_self.log",replace
 
 clear all
 macro drop _all
@@ -20,10 +20,10 @@ global data "C:\TWB\combined_TWB1_TWB2\combined.TWB1.TWB2.high.confidence.v1"
 // global data "C:\Data\TWBioBank\TWBR10810-06_Genotype(TWB1.0)\TWBR10810-06_TWB1"
 
 global datatype "imputation"  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
-// global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
+//global datatype ""  /*"imputation" or "", skips QC steps 4 & 5 if enter "imputation"*/
 
 
-global merged_survey "C:\TWB\twbiobank_merged_20201109"  
+global merged_survey "C:\TWB\twbiobank_merged_20210803"  
 /*編號00 do檔製造出來的問卷資料*/
 
 global do01 "01_plink survey data input_20201116" /*編號01 do檔名稱/位置*/
