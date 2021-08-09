@@ -1,7 +1,6 @@
-log using "C:\\TWB_2021\\20210730\\generating_dataset_snps_based_lbody_height_below_age55",replace 
-local sllist "sl1e-6 sl1e-5"
+log using "C:\\TWB_2021\\20210806_redo_twb_dataset\\generating_dataset_snps_based_lbody_height_below_age55",replace 
+local sllist " sl1e-6 sl1e-5"
 local twblist "TWB1 TWB2"
-local twblist "TWB2"
 
 local sexlist "m f a"
 local sexlist "a"
@@ -10,16 +9,18 @@ foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
 			
-			qui import delimited "C:\\TWB_2021\\TWB_2021_covar_dataset\\`twb'_imp_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
-			qui save "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",replace
-			qui import delimited "C:\\TWB_2021\\TWB_2021_raw_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
-			qui merge 1:1 IID FID using "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_B_gwas_`s'_covar+pc_dta.dta",keep(match)
-			qui save "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta", replace
+			qui import delimited "C:\\TWB_2021\\20210806_redo_twb_dataset\\`twb'_B_gwas_`s'_covar+pc.txt",delimiter(whitespace, collapse) case(preserve) clear
+			qui save "C:\\TWB_2021\\20210806_redo_twb_dataset\\`twb'_B_gwas_`s'_covar+pc_dta.dta",replace
+			qui import delimited "C:\\TWB_2021\\20210806_redo_twb_dataset\\`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded.raw",delimiter(whitespace, collapse) case(preserve) clear 
+			qui merge 1:1 IID FID using "C:\\TWB_2021\\20210806_redo_twb_dataset\\`twb'_B_gwas_`s'_covar+pc_dta.dta",keep(match)
+			qui save "C:\\TWB_2021\\20210806_redo_twb_dataset\\`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta", replace
 			
 			}
 //diff
 	}
 }
+log close
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 log close
 log using "C:\\TWB_2021\\20210730\\20210730_ivreg2_snps_based_lbody_height_below_age55",replace 
 

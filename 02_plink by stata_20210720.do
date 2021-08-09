@@ -1,22 +1,21 @@
 //20201105 9th version - test with TWB1
 // Step 2. Plink Steps
 
+cd "C:\TWB_2021"
 
-
-log using "20210804_GWAS_on_lbody_height_change_TWB_sep.log",replace
+log using "20210806_GWAS_on_lbody_height_change_TWB_sep.log",replace
 
 clear all
 macro drop _all
 
 // set working directory
-cd "C:\TWB_2021"
 
 // set path for plink
 global plinkpath "C:\plink\plink.exe"
 global plink2path "C:\plink2\plink2.exe"
 global datatwb1 "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
 global datatwb2 "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
-local datafile "$datatwb2"
+local datafile "$datatwb1"
 foreach dataf of local datafile{
     if "`dataf'"=="C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"{
 	    global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
@@ -116,7 +115,7 @@ global phenos "lbody_height"
 //global siglevel_list "0.00000005 0.000001 0.00001"
 //global siglevel_list "0.000001 0.000005"
 
- global siglevel_list "0.000001 0.00001"
+ global siglevel_list "0.00001"
 
 // set sex
 global sex "_m _f _a" /*f for female, m for male, a for all*/
