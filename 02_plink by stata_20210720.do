@@ -3,7 +3,7 @@
 
 cd "C:\TWB_2021"
 
-log using "20210806_GWAS_on_lbody_height_change_TWB_sep.log",replace
+log using "20210809_GWAS_on_lbody_height_change_TWB_sep.log",replace
 
 clear all
 macro drop _all
@@ -15,7 +15,7 @@ global plinkpath "C:\plink\plink.exe"
 global plink2path "C:\plink2\plink2.exe"
 global datatwb1 "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
 global datatwb2 "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
-local datafile "$datatwb1"
+local datafile "$datatwb1 $datatwb2"
 foreach dataf of local datafile{
     if "`dataf'"=="C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"{
 	    global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
@@ -115,7 +115,7 @@ global phenos "lbody_height"
 //global siglevel_list "0.00000005 0.000001 0.00001"
 //global siglevel_list "0.000001 0.000005"
 
- global siglevel_list "0.00001"
+ global siglevel_list "0.0001"
 
 // set sex
 global sex "_m _f _a" /*f for female, m for male, a for all*/
@@ -543,7 +543,7 @@ global vars ""
 	
 foreach s of global sex{
 	local ss `s'
-	global keepfile = "C:\TWB_2021\02_twb1+2_input`ss'_30K_20210803.txt"
+	global keepfile = "C:\TWB_2021\02_twb1+2_input`ss'_100K_20210806.txt"
 	
 	
 	/*
@@ -638,7 +638,7 @@ foreach s of global sex{
 		
 		
 		qui import delimited "$keepfile", case(preserve) encoding(UTF-8) clear 
-		keep if $condition
+		//keep if $condition
 		
 		if "$vars"!=""{
 		    keep $vars

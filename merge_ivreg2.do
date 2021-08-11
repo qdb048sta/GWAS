@@ -1,4 +1,4 @@
-log using "C:\\TWB_2021\\20210806_redo_twb_dataset\\generating_dataset_snps_based_lbody_height_below_age55",replace 
+/*log using "C:\\TWB_2021\\20210806_redo_twb_dataset\\generating_dataset_snps_based_lbody_height_below_age55",replace 
 local sllist " sl1e-6 sl1e-5"
 local twblist "TWB1 TWB2"
 
@@ -20,14 +20,22 @@ foreach twb of local twblist{
 	}
 }
 log close
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-log close
-log using "C:\\TWB_2021\\20210730\\20210730_ivreg2_snps_based_lbody_height_below_age55",replace 
+*/
+local sllist "sl1e-5"
+local twblist "TWB1 TWB2 TWB1+2_imp"
+global folder "C:\\TWB_2021\\20210809_twb12sep_ivreg2_semiparv2"
+cap log using "$folder\\20210809_ivreg2_snps_based_lbody_height_below_age55",replace 
+if _rc!=0{
+    log close
+	log using "$folder\\20210809_ivreg2_snps_based_lbody_height_below_age55",replace 
+}
 
+
+local sexlist "m f a"
 foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
-			qui use "C:\\TWB_2021\\TWB_2021_dta_dataset\\`twb'_imp_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
+			qui use "$folder\\`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
 			qui levelsof birth_year,local(birth_year_list)
 			foreach b of local birth_year_list{
 				qui gen birth_year_`b'=0
@@ -102,6 +110,42 @@ foreach twb of local twblist{
 			replace pos_dummy_6=1 if (pos_list<1000) & (pos_list>=900)
 			replace pos_dummy_8=1 if (pos_list>=1000)
 			//
+			//l_income_self
+			tostring(INCOME_SELF),replace
+
+			drop if (INCOME_SELF=="N") 
+			drop if (INCOME_SELF=="R")
+			cap gen income=0
+			if _rc==0{
+			    replace income=5000 if INCOME_SELF=="2"
+				replace income=15000 if INCOME_SELF=="3"
+				replace income=25000 if INCOME_SELF=="4"
+				replace income=35000 if INCOME_SELF=="5"
+				replace income=45000 if INCOME_SELF=="6"
+				replace income=55000 if INCOME_SELF=="7"
+				replace income=65000 if INCOME_SELF=="8"
+				replace income=75000 if INCOME_SELF=="9"
+				replace income=85000 if INCOME_SELF=="10"
+				replace income=95000 if INCOME_SELF=="11"
+				replace income=105000 if INCOME_SELF=="12"
+				replace income=115000 if INCOME_SELF=="13"
+				replace income=125000 if INCOME_SELF=="14"
+				replace income=135000 if INCOME_SELF=="15"
+				replace income=145000 if INCOME_SELF=="16"
+				replace income=155000 if INCOME_SELF=="17"
+				replace income=165000 if INCOME_SELF=="18"
+				replace income=175000 if INCOME_SELF=="19"
+				replace income=185000 if INCOME_SELF=="20"
+				replace income=195000 if INCOME_SELF=="21"
+				replace income=250000 if INCOME_SELF=="22"
+				drop if INCOME_SELF=="22"
+				gen l_income_self=log(income)
+			    
+			}
+			
+			
+			drop if missing(l_income_self)
+			//
 			display "========================================================================================================================================"
 			display "=====================This is ivreg2 regression result of TWB:`twb' Significant Level:`sl' Sex : `s' ===================================="
 			display "========================================================================================================================================"
@@ -119,16 +163,19 @@ foreach twb of local twblist{
 					display "================IVREG2 WRONG in sex==a  NO SEX DATA put it all together and run SEX==0 ================================================================="
 					ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first
 				}
+				else{
+				    cap ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*   if AGE<=55 & SEX==1 ,first
+				}
 				/*reg lbody_height rs* age age_sqr if AGE<=55 & SEX==1
 				predict r_lbh, resid if AGE<=55 & SEX==1
 		 
 				semipar l_income_self r_lbh age age_sqr if AGE<=55 & SEX==1 , nonpar(lbody_height) ci robust test(2) */ 
-				sum BODY_HEIGHT if SEX==1 ,detail
+				/*sum BODY_HEIGHT if SEX==1 ,detail
 				sum lbody_height if SEX==1,detail
-				sum income if SEX==1,detail
+				sum INCOME_SELF if SEX==1,detail
 				sum l_income_self if SEX==1,detail 
 				sum SEX if SEX==1,detail
-				sum AGE if SEX==1,detail 
+				sum AGE if SEX==1,detail*/ 
 				display "==================================================================================================="
 				display "==================================================================================================="
 				display "========================This is sex == a snips but only run female part============================"
@@ -137,16 +184,19 @@ foreach twb of local twblist{
 					display "================IVREG2 WRONG in sex==a  NO SEX DATA put it all together and run SEX==0 ================================================================="
 					ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first
 				}
+				else{
+				    ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_*  if AGE<=55 & SEX==2 ,first
+				}
 				/*reg lbody_height rs* age age_sqr if AGE<=55 & SEX==2
 				predict r_lbh, resid if AGE<=55 & SEX==2
 		 
 				semipar l_income_self r_lbh age age_sqr if AGE<=55 & SEX==2 , nonpar(lbody_height) ci robust test(2) */ 
-				sum BODY_HEIGHT if SEX==2 ,detail
+				/*sum BODY_HEIGHT if SEX==2 ,detail
 				sum lbody_height if SEX==2,detail
-				sum income if SEX==2,detail
+				sum INCOME_SELF if SEX==2,detail
 				sum l_income_self if SEX==2,detail 
 				sum SEX if SEX==2,detail
-				sum AGE if SEX==2,detail 
+				sum AGE if SEX==2,detail */
 				display "==================================================================================================="
 
 			}
@@ -155,18 +205,21 @@ foreach twb of local twblist{
 				if _rc!=0{
 					display "================IVREG2 WRONG================================================================="
 				}
+				else{
+				    ivreg2 l_income_self (lbody_height=rs*) AGE age_sqr occu_dummy_* pos_dummy_* if AGE<=55 ,first 
+				}
 				/*reg lbody_height rs* age age_sqr
 				predict r_lbh, resid
 		 
 				semipar l_income_self r_lbh age age_sqr, nonpar(lbody_height) ci robust test(2) */
 				///check sample part
 				display "======================================================================================================="
-				sum BODY_HEIGHT ,detail
+				/*sum BODY_HEIGHT ,detail
 				sum lbody_height,detail
-				sum income,detail
+				sum INCOME_SELF,detail
 				sum l_income_self,detail 
 				sum SEX,detail
-				sum AGE,detail 
+				sum AGE,detail */
 				display "======================================================================================================="
 
 			}
