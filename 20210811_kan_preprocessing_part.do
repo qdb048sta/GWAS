@@ -1,5 +1,5 @@
 //log using "C:\TWB_2021\20210727_iterration_semipars_snps_based_lbody_height_sl1e-5_below_age55",replace 
- cd "C:\TWB_2021\20210811_try_ml" // this is my working dr can be changed 
+cd "C:\TWB_2021\20210811_try_ml" // this is my working dr can be changed 
 set type double
 set linesize 220
 cap log c
@@ -33,10 +33,10 @@ TWB1_F_gwas_m_lbody_height_pc10_sl1e-6_recoded_dta.dta
  */
 
 
-local pv="1e-6"
+local pv="1e-4"
 local sexlist   "a"
 
-global sexlist ="m f"
+global sexlist ="m f a"
 
 global biobank ="1 2"
 global work    ="0 1"
@@ -54,9 +54,23 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                            local male="female"
                           }
             qui drop if BODY_HEIGHT==-9
+			cap drop if JOB_CURR=="R"
+			if _rc==0{
+				drop if JOB_CURR=="R"
+				destring(JOB_CURR),replace
+				
+			}
+			
+
+
             local working ="anybody with income"
             qui keep if JOB_CURR>0
             if `w'==1{
+						   cap drop if JOB_CURR=="R"
+						   if _rc==0{
+						   	drop if JOB_CURR=="R"
+							destring(JOB_CURR),replace
+						   }
                            qui keep if JOB_CURR==2
                            local working ="currently working"
                            }
@@ -72,6 +86,14 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                         qui replace birth_year_`b'=1 if `b'==birth_year
                 }
 				qui drop if lbody_height<0
+				cap drop if INCOME_SELF=="N"| INCOME_SELF=="R"
+				if _rc==0{
+					drop if INCOME_SELF=="N"| INCOME_SELF=="R"
+					
+				}
+			
+				
+				destring(INCOME_SELF),replace
 				qui gen l_income_self = 0 if  INCOME_SELF>0
 				qui  replace l_income_self   = 0    if INCOME_SELF== 1  /*¨S¦³¦¬¤J*/
 				qui  replace l_income_self   = 0.5  if INCOME_SELF== 2  /*10K¥H¤U*/
@@ -112,6 +134,7 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                qui  destring JOB_LGST_OCCUPATION, force replace 
                qui  destring JOB_SAME, force replace
                qui  gen  industry= JOB_LGST_OCCUPATION*(JOB_SAME==1)+ JOB_OCCUPATION*(JOB_SAME==2)
+			   
                qui drop if industry==.
                qui  gen  ind_1 = (industry <10) & (industry >=0)
                qui  gen  ind_2 = (industry <20) & (industry >=10)
@@ -137,6 +160,7 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                 }
                 */
                qui destring JOB_POSITION,      force replace
+			  
                qui destring JOB_LGST_POSITION, force replace
                qui  gen occupation= JOB_LGST_POSITION*(JOB_SAME==1)+ JOB_POSITION*(JOB_SAME==2)
                qui  drop if occupation==.
@@ -152,6 +176,7 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                qui gen     occ_other=(occ_2+ occ_7+ occ_1+ occ_3+ occ_4+ occ_5+ occ_6+ occ_8)==0
 
                qui tostring PLACE_CURR, replace
+			  
                qui gen ndigit= length(PLACE_CURR)
                qui replace PLACE_CURR="0"+PLACE_CURR if ndigit==3
                qui gen county = substr(PLACE_CURR, 1,2)
@@ -163,6 +188,7 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
                qui gen divorced=MARRIAGE=="3"
                qui gen noedu=EDUCATION=="1"
                qui gen college=(EDUCATION=="6") |  (EDUCATION=="7")
+			  
                 /* grid */
 				cap drop seq
 				sort lbody_height
