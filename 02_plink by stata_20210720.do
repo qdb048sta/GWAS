@@ -3,7 +3,7 @@
 
 cd "C:\TWB_2021"
 
-log using "20210809_GWAS_on_lbody_height_change_TWB_sep.log",replace
+log using "20210811_GWAS_on_lbody_height_change_TWB_sep.log",replace
 
 clear all
 macro drop _all
@@ -19,11 +19,11 @@ local datafile "$datatwb1 $datatwb2"
 foreach dataf of local datafile{
     if "`dataf'"=="C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"{
 	    global data "C:\TWB_2021\TWB1_data\TWBR10810-06_TWB1"
-		cd "C:\TWB_2021\20210804_TWB1_gwas_result"
+		cd "C:\TWB_2021\20210811_TWB1_gwas_result"
 	}
 	if "`dataf'"=="C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"{
 	    global data "C:\TWB_2021\TWB2_data\TWBR10810-06_TWB2"
-		cd "C:\TWB_2021\20210804_TWB2_gwas_result"
+		cd "C:\TWB_2021\20210811_TWB2_gwas_result"
 	}
 	
 
@@ -115,7 +115,7 @@ global phenos "lbody_height"
 //global siglevel_list "0.00000005 0.000001 0.00001"
 //global siglevel_list "0.000001 0.000005"
 
- global siglevel_list "0.0001"
+ global siglevel_list "0.0001 0.001"
 
 // set sex
 global sex "_m _f _a" /*f for female, m for male, a for all*/
@@ -835,6 +835,13 @@ foreach s of global sex{
 			}
 			if "`sl'"=="0.000005"{
 				local sig = "1e-6"
+			}
+			if "`sl'"=="0.0001"{
+				local sig = "1e-4"
+			}
+			
+			if "`sl'"=="0.001"{
+				local sig = "1e-3"
 			}
 			
 			global name7 = "${filename}D_gwas`ss'_clumped_`p'_pc${pcs}_sl`sig'"
