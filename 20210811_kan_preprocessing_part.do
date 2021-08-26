@@ -1,8 +1,9 @@
-//log using "C:\TWB_2021\20210727_iterration_semipars_snps_based_lbody_height_sl1e-5_below_age55",replace 
 cd "C:\TWB_2021\20210811_try_ml" // this is my working dr can be changed 
 set type double
 set linesize 220
 cap log c
+log using "C:\TWB_2021\20210811_kan_preprocessing",replace 
+
 
 global nbs=1000 /* 200 repetitions */
 local nbs=$nbs  /* 200 repetitions */
@@ -227,3 +228,4 @@ window manage maintitle "$title TWB`bb'_PV`pv'_Sex`s'_Work`w'"
 }
 }
 }
+log close

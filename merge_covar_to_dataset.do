@@ -1,8 +1,8 @@
-local sllist " sl1e-4"
+local sllist " sl1e-3"
 local twblist "TWB1 TWB2"
 
 local sexlist "m f a"
-global datafolder "C:\\TWB_2021\\20210811_sl1e-4\\"
+global datafolder "C:\\TWB_2021\\20210817_sl1e-3\\"
 foreach twb of local twblist{
 	foreach sl of local sllist{
 		foreach s of local sexlist{
