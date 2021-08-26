@@ -1,0 +1,6 @@
+r_ml_stata outcome,mlmodel(elasticnet)
+r_ml_stata outcome,mlmodel(tree)
+r_ml_stata outcome,mlmodel(randomforest)
+r_ml_stata outcome,mlmodel(boost)
+r_ml_stata outcome,mlmodel(neuralnet)
+r_ml_stata outcome,mlmodel(svm)
