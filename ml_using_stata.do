@@ -1,4 +1,5 @@
 global datafolder "C:\\TWB_2021\\20210824_0.01missing_rate_data\\"
+log using "C:\\TWB_2021\\20210827_ML_stata\\20210827_stata_ml.log",replace
 cd $datafolder
 local ML_model "elasticnet tree randomforest boost nearestneighbor neuralnet svm"
 local TWB "TWB1 TWB2"
@@ -10,68 +11,111 @@ foreach model of local ML_model{
 		    foreach s of local sex{
 			di "`twb' `model' `sl' `s' "
 			use "$datafolder`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
-			            keep rs* AGE lbody_height SEX EDUCATION MARRIAGE
+			            qui keep rs* AGE lbody_height SEX EDUCATION MARRIAGE
 					    unab x_varlist:_all
+						global rs_over_minimum 
+						
 						foreach v of local x_varlist{
 						    if strpos("`v'","rs")!=0 & "`v'"!="eduyrs"{
-							    tostring(`v'),replace
-							    drop if `v'=="NA"
-								destring(`v'),replace
+							    qui tostring(`v'),replace
+								qui count if `v'=="NA"
+								if r(N)/_N <0.002{
+									//di r(N)
+									//di "`v'"
+									global rs_over_minimum "$rs_over_minimum `v'"
+									
+								}
+
+
 							}
 						}
-			
+						
+						keep $rs_over_minimum AGE lbody_height SEX EDUCATION MARRIAGE
+						foreach v of global rs_over_minimum{
+						    if strpos("`v'","rs")!=0 & "`v'"!="eduyrs"{
+							    qui tostring(`v'),replace
+
+							    qui drop if `v'=="NA"
+								qui destring(`v'),replace
+							}
+						}
 						//preprocessing
-						gen age_sqr=sqrt(AGE)
+						qui gen age_sqr=sqrt(AGE)
 						
-						tostring(SEX),replace
-						gen male=0
-						replace male=1 if SEX=="1"
+						qui tostring(SEX),replace
+						qui gen male=0
+						qui replace male=1 if SEX=="1"
 						
-						tostring(MARRIAGE),replace
-						gen married=0
-						replace married=1 if MARRIAGE=="2"
+						qui tostring(MARRIAGE),replace
+						qui gen married=0
+						qui replace married=1 if MARRIAGE=="2"
 						
-						tostring(EDUCATION),replace
-						gen college=0
-						replace college=1 if EDUCATION=="6" | EDUCATION=="7"
+						qui tostring(EDUCATION),replace
+						qui gen college=0
+						qui replace college=1 if EDUCATION=="6" | EDUCATION=="7"
 						//
 						global y "lbody_height"
 						global X "rs* AGE age_sqr male college married"
 						splitsample,generate(vsplit,replace) split(0.80,0.20) show rseed(1010)
-						keep $X $y
+						qui keep $X $y vsplit
 
 						//get training dataset
 						
-						preserve 
-						keep if vsplit==1
-						drop vsplit 
-						save data_train,replace
-						restore
+						qui preserve 
+						qui keep if vsplit==1
+						qui drop vsplit 
+						qui save data_train,replace
+						qui restore
                        
 						//get testing dataset (more like X_test in python )
-						preserve
-						keep if vsplit==2
-						drop $y
-						drop vsplit
-						save data_test,replace
-						restore
+						qui preserve
+						qui keep if vsplit==2
+						qui drop $y
+						qui drop vsplit
+						qui save data_test,replace
+						qui restore
                        
 						//form a dataset containing only y
-						preserve
-						keep if vsplit==2
-						keep $y
-						gen index=_n-1
-						save "test_y.dta",replace
-						restore
+						qui preserve
+						qui keep if vsplit==2
+						qui keep $y
+						qui gen index=_n-1
+						qui save "test_y.dta",replace
+						qui restore
                         
 
-						use data_train,clear
+						qui use data_train,clear
 
 
 
 
-						r_ml_stata $y $X ,mlmodel("tree") in_prediction("`model'_in_pred") cross_validation("CV")out_sample(data_test)  out_prediction("`model'_out_pred") seed(10) save_graph_cv("`model'_graph_cv")
+						qui r_ml_stata $y $X ,mlmodel("tree") in_prediction("`model'_in_pred") cross_validation("CV")out_sample(data_test)  out_prediction("`model'_out_pred") seed(10) save_graph_cv("`model'_graph_cv")
 					    ereturn list
+
+						graph export "C:\\TWB_2021\\20210827_ML_stata\\`twb'_`sl'_`s'_`model'_graph_cv.png", as(png) name("Graph") replace
+						
+						qui use data_train,clear
+						reg $y $X
+						qui use data_test
+						qui predict ols_y_pred
+						qui gen index=_n-1
+						keep ols_y_pred index
+						save "y_pred.dta",replace
+						
+						use "`model'_out_pred",clear
+						merge 1:1 index using "test_y.dta"
+						drop _merge
+						merge 1:1 index using "y_pred.dta"
+						di "print mse"
+						qui gen squared_error=(lbody_height-ols_y_pred)^2
+						sum squared_error
+						
+						tw (line $y index, lc(green)) ///
+						(line out_sample_pred index,lc(orange) ) ///
+						(line ols_y_pred index,lc(red)), ///
+						xtitle("`model'_out_sample_prediction") ///
+						legend(order(1 "Actual" 2 "Out_of_sample" 3 "OLS_Out_of_sample"))
+						graph export "C:\\TWB_2021\\20210827_ML_stata\\`twb'_`sl'_`s'_`model'_graph_cv_plus_ols.png", as(png) name("Graph") replace
 
 
 			}
@@ -79,7 +123,7 @@ foreach model of local ML_model{
 	}
 }
 
-
+log close
 				
 
 				
