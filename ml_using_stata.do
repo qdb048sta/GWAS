@@ -9,10 +9,11 @@ foreach model of local ML_model{
     foreach twb of local TWB{
 	    foreach sl of local sl_list{
 		    foreach s of local sex{
-			di "`twb' `model' `sl' `s' "
-			use "$datafolder`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
-			            qui keep rs* AGE lbody_height SEX EDUCATION MARRIAGE
-					    unab x_varlist:_all
+						di "`twb' `model' `sl' `s' "
+						use "$datafolder`twb'_F_gwas_`s'_lbody_height_pc10_`sl'_recoded_dta.dta",clear
+						drop if lbody_height<0
+						qui keep rs* AGE lbody_height SEX EDUCATION MARRIAGE
+						unab x_varlist:_all
 						global rs_over_minimum 
 						
 						foreach v of local x_varlist{
@@ -106,6 +107,7 @@ foreach model of local ML_model{
 						merge 1:1 index using "test_y.dta"
 						drop _merge
 						merge 1:1 index using "y_pred.dta"
+						save "C:\\TWB_2021\\20210827_ML_stata\\`twb'_`sl'_`s'_`model'_graph_cv_plus_ols_dta.dta",replace
 						di "print mse"
 						qui gen squared_error=(lbody_height-ols_y_pred)^2
 						sum squared_error
